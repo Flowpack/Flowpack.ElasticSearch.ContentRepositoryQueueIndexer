@@ -1,7 +1,7 @@
 {
     "name": "flowpack/elasticsearch-contentrepositoryqueueindexer",
     "type": "typo3-flow-package",
-    "description": "Add description here",
+    "description": "Neos CMS ElasticSearch importer based on Beanstalkd (to handle big indexing tags, +50'000 nodes)",
     "require": {
         "typo3/flow": "*",
         "typo3/jobqueue-beanstalkd": "*"
