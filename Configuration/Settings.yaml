@@ -1,0 +1,6 @@
+TYPO3:
+  Jobqueue:
+    Common:
+      queues:
+        'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
+          className: 'TYPO3\Jobqueue\Beanstalkd\Queue\BeanstalkdQueue'
