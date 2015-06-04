@@ -19,6 +19,7 @@ use TYPO3\Jobqueue\Common\Queue\Message;
 use TYPO3\Jobqueue\Common\Queue\QueueInterface;
 use TYPO3\TYPO3CR\Domain\Factory\NodeFactory;
 use TYPO3\TYPO3CR\Domain\Model\NodeData;
+use TYPO3\TYPO3CR\Domain\Model\NodeInterface;
 use TYPO3\TYPO3CR\Domain\Repository\NodeDataRepository;
 use TYPO3\TYPO3CR\Domain\Service\ContextFactory;
 
@@ -106,6 +107,9 @@ class IndexingJob implements JobInterface {
 			'dimensions' => $this->dimensions
 		]);
 		$currentNode = $this->nodeFactory->createFromNodeData($nodeData, $context);
+		if (!$currentNode instanceof NodeInterface) {
+			return TRUE;
+		}
 		$this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
 		$this->nodeIndexer->indexNode($currentNode);
 		$this->nodeIndexer->flush();
