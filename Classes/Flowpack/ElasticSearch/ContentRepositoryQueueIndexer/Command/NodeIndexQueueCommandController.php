@@ -107,21 +107,22 @@ class NodeIndexQueueCommandController extends CommandController {
 	 */
 	protected function indexWorkspace($workspaceName, $indexPostfix) {
 		$offset = 0;
-		$batchSize = 1000;
+		$batchSize = 100;
 		while (TRUE) {
-			$result = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, 1000);
+			$result = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $batchSize);
 			if ($result === array()) {
 				break;
 			}
+			$jobData = [];
 			foreach ($result as $data) {
-				$indexingJob = new IndexingJob(
-					$indexPostfix,
-					$data['nodeIdentifier'],
-					$workspaceName,
-					$data['dimensions']
-				);
-				$this->jobManager->queue('Flowpack.ElasticSearch.ContentRepositoryQueueIndexer', $indexingJob);
+				$jobData[] = [
+					'nodeIdentifier' => $data['nodeIdentifier'],
+					'dimensions' => $data['dimensions']
+
+				];
 			}
+			$indexingJob = new IndexingJob($indexPostfix, $workspaceName, $jobData);
+			$this->jobManager->queue('Flowpack.ElasticSearch.ContentRepositoryQueueIndexer', $indexingJob);
 			$this->output('.');
 			$offset += $batchSize;
 		}

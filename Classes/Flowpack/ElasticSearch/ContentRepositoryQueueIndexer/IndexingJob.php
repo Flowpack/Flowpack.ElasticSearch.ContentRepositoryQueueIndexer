@@ -14,6 +14,7 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\LoggerInterface;
 use TYPO3\Flow\Annotations as Flow;
+use TYPO3\Flow\Utility\Algorithms;
 use TYPO3\Jobqueue\Common\Job\JobInterface;
 use TYPO3\Jobqueue\Common\Queue\Message;
 use TYPO3\Jobqueue\Common\Queue\QueueInterface;
@@ -29,14 +30,39 @@ use TYPO3\TYPO3CR\Domain\Service\ContextFactory;
 class IndexingJob implements JobInterface {
 
 	/**
-	 * @var string
+	 * @var NodeIndexer
+	 * @Flow\Inject
 	 */
-	protected $indexPostfix;
+	protected $nodeIndexer;
+
+	/**
+	 * @var NodeDataRepository
+	 * @Flow\Inject
+	 */
+	protected $nodeDataRepository;
+
+	/**
+	 * @var NodeFactory
+	 * @Flow\Inject
+	 */
+	protected $nodeFactory;
+
+	/**
+	 * @var ContextFactory
+	 * @Flow\Inject
+	 */
+	protected $contextFactory;
+
+	/**
+	 * @var LoggerInterface
+	 * @Flow\Inject
+	 */
+	protected $logger;
 
 	/**
 	 * @var string
 	 */
-	protected $nodeIdentifier;
+	protected $identifier;
 
 	/**
 	 * @var string
@@ -46,49 +72,23 @@ class IndexingJob implements JobInterface {
 	/**
 	 * @var string
 	 */
-	protected $dimensions;
+	protected $indexPostfix;
 
 	/**
-	 * @Flow\Inject
-	 * @var NodeIndexer
+	 * @var array
 	 */
-	protected $nodeIndexer;
-
-	/**
-	 * @Flow\Inject
-	 * @var NodeDataRepository
-	 */
-	protected $nodeDataRepository;
-
-	/**
-	 * @Flow\Inject
-	 * @var NodeFactory
-	 */
-	protected $nodeFactory;
-
-	/**
-	 * @Flow\Inject
-	 * @var ContextFactory
-	 */
-	protected $contextFactory;
-
-	/**
-	 * @Flow\Inject
-	 * @var LoggerInterface
-	 */
-	protected $logger;
+	protected $nodes = [];
 
 	/**
 	 * @param string $indexPostfix
-	 * @param string $nodeIdentifier
 	 * @param string $workspaceName
-	 * @param array $dimensions
+	 * @param array $nodes
 	 */
-	public function __construct($indexPostfix, $nodeIdentifier, $workspaceName, array $dimensions = array()) {
-		$this->indexPostfix = $indexPostfix;
-		$this->nodeIdentifier = $nodeIdentifier;
+	public function __construct($indexPostfix, $workspaceName, array $nodes) {
+		$this->identifier = Algorithms::generateRandomString(24);
 		$this->workspaceName = $workspaceName;
-		$this->dimensions = $dimensions;
+		$this->indexPostfix = $indexPostfix;
+		$this->nodes = $nodes;
 	}
 
 	/**
@@ -100,18 +100,21 @@ class IndexingJob implements JobInterface {
 	 * @return boolean TRUE if the job was executed successfully and the message should be finished
 	 */
 	public function execute(QueueInterface $queue, Message $message) {
-		/** @var NodeData $nodeData */
-		$nodeData = $this->nodeDataRepository->findByIdentifier($this->nodeIdentifier);
-		$context = $this->contextFactory->create([
-			'workspaceName' => $this->workspaceName,
-			'dimensions' => $this->dimensions
-		]);
-		$currentNode = $this->nodeFactory->createFromNodeData($nodeData, $context);
-		if (!$currentNode instanceof NodeInterface) {
-			return TRUE;
+		foreach ($this->nodes as $node) {
+			/** @var NodeData $nodeData */
+			$nodeData = $this->nodeDataRepository->findByIdentifier($node['nodeIdentifier']);
+			$context = $this->contextFactory->create([
+				'workspaceName' => $this->workspaceName,
+				'dimensions' => $node['dimensions']
+			]);
+			$currentNode = $this->nodeFactory->createFromNodeData($nodeData, $context);
+			if (!$currentNode instanceof NodeInterface) {
+				return TRUE;
+			}
+			$this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
+			$this->nodeIndexer->indexNode($currentNode);
 		}
-		$this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
-		$this->nodeIndexer->indexNode($currentNode);
+
 		$this->nodeIndexer->flush();
 
 		return TRUE;
@@ -123,7 +126,7 @@ class IndexingJob implements JobInterface {
 	 * @return string A job identifier
 	 */
 	public function getIdentifier() {
-		return $this->nodeIdentifier;
+		return $this->identifier;
 	}
 
 	/**
