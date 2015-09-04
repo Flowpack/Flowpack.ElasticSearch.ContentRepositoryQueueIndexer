@@ -7,6 +7,7 @@ use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\LoggerInterface;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
+use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\UpdateAliasJob;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Cli\CommandController;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Mapping\NodeTypeMappingBuilder;
@@ -81,6 +82,11 @@ class NodeIndexQueueCommandController extends CommandController {
 		} else {
 			$this->indexWorkspace($workspace, $indexPostfix);
 		}
+		$updateAliasJob = new UpdateAliasJob($indexPostfix);
+		$this->jobManager->queue('Flowpack.ElasticSearch.ContentRepositoryQueueIndexer', $updateAliasJob);
+
+		$this->outputLine();
+		$this->outputLine('Indexing jobs created with success ...');
 	}
 
 	/**
