@@ -2,8 +2,8 @@
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
 
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
-use Flowpack\ElasticSearch\ContentRepositoryAdaptor\LoggerInterface;
 use TYPO3\Flow\Annotations as Flow;
+use TYPO3\Flow\Log\SystemLoggerInterface;
 use TYPO3\Flow\Utility\Algorithms;
 use TYPO3\Jobqueue\Common\Job\JobInterface;
 use TYPO3\Jobqueue\Common\Queue\Message;
@@ -44,7 +44,7 @@ class IndexingJob implements JobInterface {
 	protected $contextFactory;
 
 	/**
-	 * @var LoggerInterface
+	 * @var SystemLoggerInterface
 	 * @Flow\Inject
 	 */
 	protected $logger;
@@ -102,6 +102,7 @@ class IndexingJob implements JobInterface {
 				return TRUE;
 			}
 			$this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
+			$this->logger->log(sprintf('Process indexing job for %s', $currentNode));
 			$this->nodeIndexer->indexNode($currentNode);
 		}
 
