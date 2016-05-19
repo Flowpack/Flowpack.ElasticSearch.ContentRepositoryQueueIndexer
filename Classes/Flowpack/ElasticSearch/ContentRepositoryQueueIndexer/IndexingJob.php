@@ -99,7 +99,8 @@ class IndexingJob implements JobInterface {
 			]);
 			$currentNode = $this->nodeFactory->createFromNodeData($nodeData, $context);
 			if (!$currentNode instanceof NodeInterface) {
-				return TRUE;
+				$this->logger->log(sprintf('Node with identifier %s could not be processed', $node['nodeIdentifier']));
+				continue;
 			}
 			$this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
 			$this->logger->log(sprintf('Process indexing job for %s', $currentNode));
