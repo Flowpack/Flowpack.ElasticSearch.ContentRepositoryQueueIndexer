@@ -95,12 +95,18 @@ class IndexingJob implements JobInterface {
 			$nodeData = $this->nodeDataRepository->findByIdentifier($node['nodeIdentifier']);
 			$context = $this->contextFactory->create([
 				'workspaceName' => $this->workspaceName,
+				'invisibleContentShown' => true,
+				'inaccessibleContentShown' => false,
 				'dimensions' => $node['dimensions']
 			]);
 			$currentNode = $this->nodeFactory->createFromNodeData($nodeData, $context);
+
+			// Skip this iteration if the node can not be fetched from the current context
 			if (!$currentNode instanceof NodeInterface) {
-				return TRUE;
+				$this->logger->log(sprintf('Node with identifier %s could not be processed', $node['nodeIdentifier']));
+				continue;
 			}
+
 			$this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
 			$this->logger->log(sprintf('Process indexing job for %s', $currentNode));
 			$this->nodeIndexer->indexNode($currentNode);
