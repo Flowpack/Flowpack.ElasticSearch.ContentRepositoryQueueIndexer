@@ -16,6 +16,7 @@ use TYPO3\Flow\Core\Booting\Scripts;
 use TYPO3\Flow\Exception;
 use TYPO3\Flow\Persistence\PersistenceManagerInterface;
 use TYPO3\Jobqueue\Common\Job\JobManager;
+use TYPO3\TYPO3CR\Domain\Factory\NodeFactory;
 use TYPO3\TYPO3CR\Domain\Model\NodeData;
 use TYPO3\TYPO3CR\Domain\Model\NodeInterface;
 use TYPO3\TYPO3CR\Domain\Repository\WorkspaceRepository;
@@ -34,6 +35,12 @@ class NodeIndexQueueCommandController extends CommandController {
 	 */
 	protected $jobManager;
 
+	/**
+	 * @var PersistenceManagerInterface
+	 * @Flow\Inject
+	 */
+	protected $persistenceManager;
+	
 	/**
 	 * @Flow\Inject
 	 * @var NodeTypeMappingBuilder
@@ -65,6 +72,8 @@ class NodeIndexQueueCommandController extends CommandController {
 	protected $logger;
 
 	/**
+	 * Index all nodes by creating a new index and when everything was completed, switch the index alias.
+	 *
 	 * @param string $workspace
 	 */
 	public function buildCommand($workspace = NULL) {
@@ -97,22 +106,26 @@ class NodeIndexQueueCommandController extends CommandController {
 		$offset = 0;
 		$batchSize = 100;
 		while (TRUE) {
-			$result = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $batchSize);
-			if ($result === array()) {
-				break;
-			}
+			$iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $batchSize);
+
 			$jobData = [];
-			foreach ($result as $data) {
+
+			foreach ($this->nodeDataRepository->iterate($iterator) as $data) {
 				$jobData[] = [
 					'nodeIdentifier' => $data['nodeIdentifier'],
 					'dimensions' => $data['dimensions']
-
 				];
 			}
+
+			if ($jobData === []) {
+				break;
+			}
+
 			$indexingJob = new IndexingJob($indexPostfix, $workspaceName, $jobData);
 			$this->jobManager->queue('Flowpack.ElasticSearch.ContentRepositoryQueueIndexer', $indexingJob);
 			$this->output('.');
 			$offset += $batchSize;
+			$this->persistenceManager->clearState();
 		}
 	}
 
