@@ -90,14 +90,6 @@ class NodeIndexQueueCommandController extends CommandController {
 	}
 
 	/**
-	 * @param string $indexPostfix
-	 */
-	public function updateAliasCommand($indexPostfix) {
-		$this->nodeIndexer->setIndexNamePostfix($indexPostfix);
-		$this->nodeIndexer->updateIndexAlias();
-	}
-
-	/**
 	 * @param string $workspaceName
 	 * @param string $indexPostfix
 	 */
