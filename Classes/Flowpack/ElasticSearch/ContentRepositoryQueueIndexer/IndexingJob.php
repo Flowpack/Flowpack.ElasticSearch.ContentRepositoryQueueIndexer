@@ -94,6 +94,8 @@ class IndexingJob implements JobInterface
     public function execute(QueueInterface $queue, Message $message)
     {
         $this->nodeIndexer->withBulkProcessing(function () {
+            $numberOfNodes = count($this->nodes);
+            $startTime = microtime(true);
             foreach ($this->nodes as $node) {
                 /** @var NodeData $nodeData */
                 $nodeData = $this->nodeDataRepository->findByIdentifier($node['nodeIdentifier']);
@@ -107,18 +109,21 @@ class IndexingJob implements JobInterface
 
                 // Skip this iteration if the node can not be fetched from the current context
                 if (!$currentNode instanceof NodeInterface) {
-                    $this->logger->log(sprintf('Node with identifier %s could not be processed', $node['nodeIdentifier']));
+                    $this->logger->log(sprintf('action=indexing step=failed node=%s message="Node could not be processed"', $node['nodeIdentifier']));
                     continue;
                 }
 
                 $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
-                $this->logger->log(sprintf('Process indexing job for %s', $currentNode));
+                $this->logger->log(sprintf('action=indexing step=started node=%s', $currentNode->getIdentifier()));
 
                 $this->nodeIndexer->indexNode($currentNode);
 
             }
 
             $this->nodeIndexer->flush();
+            $duration = microtime(true) - $startTime;
+            $rate = $numberOfNodes / $duration;
+            $this->logger->log(sprintf('action=indexing step=finished number_of_nodes=%d duration=%f nodes_per_second=%f', $numberOfNodes, $duration, $rate));
         });
 
         return true;

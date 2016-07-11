@@ -40,7 +40,7 @@ class NodeIndexQueueCommandController extends CommandController {
 	 * @Flow\Inject
 	 */
 	protected $persistenceManager;
-	
+
 	/**
 	 * @Flow\Inject
 	 * @var NodeTypeMappingBuilder
@@ -104,7 +104,7 @@ class NodeIndexQueueCommandController extends CommandController {
 	 */
 	protected function indexWorkspace($workspaceName, $indexPostfix) {
 		$offset = 0;
-		$batchSize = 100;
+		$batchSize = 250;
 		while (TRUE) {
 			$iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $batchSize);
 
@@ -136,7 +136,7 @@ class NodeIndexQueueCommandController extends CommandController {
 	protected function createNextIndex($indexPostfix) {
 		$this->nodeIndexer->setIndexNamePostfix($indexPostfix);
 		$this->nodeIndexer->getIndex()->create();
-		$this->logger->log('Created index ' . $this->nodeIndexer->getIndexName(), LOG_INFO);
+		$this->logger->log(sprintf('action=indexing step=index-created index=%s', $this->nodeIndexer->getIndexName()), LOG_INFO);
 	}
 
 	/**
@@ -148,7 +148,7 @@ class NodeIndexQueueCommandController extends CommandController {
 			/** @var \Flowpack\ElasticSearch\Domain\Model\Mapping $mapping */
 			$mapping->apply();
 		}
-		$this->logger->log('Updated Mapping.', LOG_INFO);
+		$this->logger->log(sprintf('action=indexing step=mapping-updated index=%s', $this->nodeIndexer->getIndexName()), LOG_INFO);
 	}
 
 

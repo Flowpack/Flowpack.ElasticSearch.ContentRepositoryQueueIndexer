@@ -62,7 +62,7 @@ class UpdateAliasJob implements JobInterface {
     public function execute(QueueInterface $queue, Message $message) {
         $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
         $this->nodeIndexer->updateIndexAlias();
-        $this->logger->log(sprintf('Update Index Alias (%s)', $this->indexPostfix), LOG_NOTICE);
+        $this->logger->log(sprintf('action=indexing step=index-switched alias=%s', $this->indexPostfix), LOG_NOTICE);
 
         return TRUE;
     }
