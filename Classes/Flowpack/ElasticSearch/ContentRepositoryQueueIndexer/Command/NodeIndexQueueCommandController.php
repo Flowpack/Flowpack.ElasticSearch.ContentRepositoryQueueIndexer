@@ -92,10 +92,11 @@ class NodeIndexQueueCommandController extends CommandController {
 			$this->indexWorkspace($workspace, $indexPostfix);
 		}
 		$updateAliasJob = new UpdateAliasJob($indexPostfix);
-		$this->jobManager->queue('Flowpack.ElasticSearch.ContentRepositoryQueueIndexer', $updateAliasJob);
+		$queueName = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
+		$this->jobManager->queue($queueName, $updateAliasJob);
 
 		$this->outputLine();
-		$this->outputLine('Indexing jobs created with success ...');
+		$this->outputLine(sprintf('Indexing jobs created for queue %s with success ...', $queueName));
 	}
 
 	/**
