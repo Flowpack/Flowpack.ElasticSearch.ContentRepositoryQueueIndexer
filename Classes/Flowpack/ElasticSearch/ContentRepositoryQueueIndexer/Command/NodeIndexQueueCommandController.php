@@ -87,9 +87,14 @@ class NodeIndexQueueCommandController extends CommandController
 
         if ($workspace === null) {
             foreach ($this->workspaceRepository->findAll() as $workspace) {
-                $this->indexWorkspace($workspace->getName(), $indexPostfix);
+                $workspace = $workspace->getName();
+                $this->outputLine();
+                $this->outputLine(sprintf('<info>++</info> Indexing %s workspace', $workspace));
+                $this->indexWorkspace($workspace, $indexPostfix);
             }
         } else {
+            $this->outputLine();
+            $this->outputLine(sprintf('<info>++</info> Indexing only %s workspace', $workspace));
             $this->indexWorkspace($workspace, $indexPostfix);
         }
         $updateAliasJob = new UpdateAliasJob($indexPostfix);
@@ -130,6 +135,7 @@ class NodeIndexQueueCommandController extends CommandController
             $offset += $batchSize;
             $this->persistenceManager->clearState();
         }
+        $this->outputLine();
     }
 
     /**
