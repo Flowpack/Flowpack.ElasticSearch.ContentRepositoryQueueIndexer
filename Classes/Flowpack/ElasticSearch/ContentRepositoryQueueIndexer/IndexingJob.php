@@ -19,7 +19,6 @@ use TYPO3\TYPO3CR\Domain\Service\ContextFactory;
  */
 class IndexingJob implements JobInterface
 {
-
     /**
      * @var NodeIndexer
      * @Flow\Inject
@@ -117,7 +116,6 @@ class IndexingJob implements JobInterface
                 $this->logger->log(sprintf('action=indexing step=started node=%s', $currentNode->getIdentifier()));
 
                 $this->nodeIndexer->indexNode($currentNode);
-
             }
 
             $this->nodeIndexer->flush();
@@ -148,5 +146,4 @@ class IndexingJob implements JobInterface
     {
         return sprintf('ElasticSearch Indexing Job (%s)', $this->getIdentifier());
     }
-
 }
