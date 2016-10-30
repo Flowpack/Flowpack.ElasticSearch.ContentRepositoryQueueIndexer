@@ -1,9 +1,9 @@
-TYPO3:
-  Jobqueue:
+Flowpack:
+  JobQueue:
     Common:
       queues:
         'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
-          className: 'TYPO3\Jobqueue\Beanstalkd\Queue\BeanstalkdQueue'
+          className: 'Flowpack\JobQueue\Beanstalkd\Queue\BeanstalkdQueue'
           options:
             host: '127.0.0.1'
             port: 11300
