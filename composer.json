@@ -5,8 +5,8 @@
   "license": "MIT",
   "require": {
     "typo3/jobqueue-beanstalkd": "*",
-    "flowpack/elasticsearch-contentrepositoryadaptor": "^2.0.2",
-    "typo3/typo3cr-search": "^2.1.1"
+    "flowpack/elasticsearch-contentrepositoryadaptor": "*",
+    "typo3/typo3cr-search": "*"
   },
   "autoload": {
     "psr-0": {

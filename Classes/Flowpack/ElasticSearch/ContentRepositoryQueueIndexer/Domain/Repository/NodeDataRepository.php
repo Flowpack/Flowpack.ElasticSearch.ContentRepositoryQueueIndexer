@@ -3,11 +3,9 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository
 
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Internal\Hydration\IterableResult;
-use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Persistence\Repository;
-use TYPO3\TYPO3CR\Exception;
 
 /**
  * @Flow\Scope("singleton")
