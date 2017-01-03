@@ -8,9 +8,9 @@ use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeD
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\UpdateAliasJob;
 use Flowpack\JobQueue\Common\Job\JobManager;
-use TYPO3\Flow\Annotations as Flow;
-use TYPO3\Flow\Cli\CommandController;
-use TYPO3\Flow\Persistence\PersistenceManagerInterface;
+use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Cli\CommandController;
+use Neos\Flow\Persistence\PersistenceManagerInterface;
 use TYPO3\TYPO3CR\Domain\Repository\WorkspaceRepository;
 
 /**
