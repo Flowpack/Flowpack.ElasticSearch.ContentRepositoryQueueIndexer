@@ -12,7 +12,7 @@ use Neos\Flow\Persistence\Repository;
  */
 class NodeDataRepository extends Repository
 {
-    const ENTITY_CLASSNAME = 'TYPO3\TYPO3CR\Domain\Model\NodeData';
+    const ENTITY_CLASSNAME = 'Neos\ContentRepository\Domain\Model\NodeData';
 
     /**
      * @Flow\Inject
@@ -33,7 +33,7 @@ class NodeDataRepository extends Repository
         $queryBuilder = $this->entityManager->createQueryBuilder();
 
         $queryBuilder->select('n.Persistence_Object_Identifier nodeIdentifier, n.dimensionValues dimensions')
-            ->from('TYPO3\TYPO3CR\Domain\Model\NodeData', 'n')
+            ->from('Neos\ContentRepository\Domain\Model\NodeData', 'n')
             ->where("n.workspace = :workspace AND n.removed = :removed AND n.movedTo IS NULL")
             ->setFirstResult((integer)$firstResult)
             ->setMaxResults((integer)$maxResults)

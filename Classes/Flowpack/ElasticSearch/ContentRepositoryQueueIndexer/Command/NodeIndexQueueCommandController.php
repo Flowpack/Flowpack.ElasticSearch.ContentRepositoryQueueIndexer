@@ -11,7 +11,7 @@ use Flowpack\JobQueue\Common\Job\JobManager;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Cli\CommandController;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
-use TYPO3\TYPO3CR\Domain\Repository\WorkspaceRepository;
+use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
 
 /**
  * Provides CLI features for index handling
