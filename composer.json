@@ -1,16 +1,21 @@
 {
-  "name": "flowpack/elasticsearch-contentrepositoryqueueindexer",
-  "type": "typo3-flow-package",
-  "description": "Neos CMS ElasticSearch indexer based on beanstalkd (job queue)",
-  "license": "MIT",
-  "require": {
-    "typo3/jobqueue-beanstalkd": "*",
-    "flowpack/elasticsearch-contentrepositoryadaptor": "*",
-    "typo3/typo3cr-search": "*"
-  },
-  "autoload": {
-    "psr-0": {
-      "Flowpack\\ElasticSearch\\ContentRepositoryQueueIndexer": "Classes"
+    "name": "flowpack/elasticsearch-contentrepositoryqueueindexer",
+    "type": "typo3-flow-package",
+    "description": "Neos CMS ElasticSearch indexer based on beanstalkd (job queue)",
+    "license": "MIT",
+    "require": {
+        "typo3/jobqueue-beanstalkd": "*",
+        "flowpack/elasticsearch-contentrepositoryadaptor": "*",
+        "typo3/typo3cr-search": "*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Flowpack\\ElasticSearch\\ContentRepositoryQueueIndexer": "Classes"
+        }
+    },
+    "extra": {
+        "applied-flow-migrations": [
+            "TYPO3.FLOW3-201201261636"
+        ]
     }
-  }
 }
