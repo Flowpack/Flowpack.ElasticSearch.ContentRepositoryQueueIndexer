@@ -48,7 +48,7 @@ class NodeDataRepository extends Repository
     /**
      * Iterator over an IterableResult and return a Generator
      *
-     * This methos is useful for batch processing huge result set as it clear the object
+     * This method is useful for batch processing huge result set as it clear the object
      * manager and detach the current object on each iteration.
      *
      * @param IterableResult $iterator

@@ -38,8 +38,6 @@ class UpdateAliasJob implements JobInterface
 
     /**
      * @param string $indexPostfix
-     * @param string $workspaceName
-     * @param array $nodes
      */
     public function __construct($indexPostfix)
     {
