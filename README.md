@@ -13,7 +13,7 @@ How to process indexing job
 
 You can use this CLI command to process indexing job:
 
-    flow job:work --queue Flowpack.ElasticSearch.ContentRepositoryQueueIndexer
+    flow nodeindexqueue:work
 
 You can use tools like ```supervisord``` to manage long runing process. Bellow you can
 found a basic configuration:

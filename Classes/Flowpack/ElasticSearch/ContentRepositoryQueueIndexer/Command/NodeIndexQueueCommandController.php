@@ -15,6 +15,7 @@ use TYPO3\Flow\Cli\CommandController;
 use TYPO3\Flow\Persistence\PersistenceManagerInterface;
 use TYPO3\Flow\Utility\Files;
 use TYPO3\TYPO3CR\Domain\Repository\WorkspaceRepository;
+use Flowpack\JobQueue\Common\Exception as JobQueueException;
 
 /**
  * Provides CLI features for index handling
@@ -108,6 +109,64 @@ class NodeIndexQueueCommandController extends CommandController
     }
 
     /**
+     * @param int $exitAfter If set, this command will exit after the given amount of seconds
+     * @param int $limit If set, only the given amount of jobs are processed (successful or not) before the script exits
+     * @param bool $verbose Output debugging information
+     * @return void
+     */
+    public function workCommand($exitAfter = null, $limit = null, $verbose = false)
+    {
+        if ($verbose) {
+            $this->output('Watching queue <b>"%s"</b>', [self::QUEUE_NAME]);
+            if ($exitAfter !== null) {
+                $this->output(' for <b>%d</b> seconds', [$exitAfter]);
+            }
+            $this->outputLine('...');
+        }
+        $startTime = time();
+        $timeout = null;
+        $numberOfJobExecutions = 0;
+        do {
+            $message = null;
+            if ($exitAfter !== null) {
+                $timeout = max(1, $exitAfter - (time() - $startTime));
+            }
+            try {
+                $message = $this->jobManager->waitAndExecute(self::QUEUE_NAME, $timeout);
+            } catch (JobQueueException $exception) {
+                $numberOfJobExecutions ++;
+                $this->outputLine('<error>%s</error>', [$exception->getMessage()]);
+                if ($verbose && $exception->getPrevious() instanceof \Exception) {
+                    $this->outputLine('  Reason: %s', [$exception->getPrevious()->getMessage()]);
+                }
+            } catch (\Exception $exception) {
+                $this->outputLine('<error>Unexpected exception during job execution: %s, aborting...</error>', [$exception->getMessage()]);
+                $this->quit(1);
+            }
+            if ($message !== null) {
+                $numberOfJobExecutions ++;
+                if ($verbose) {
+                    $messagePayload = strlen($message->getPayload()) <= 50 ? $message->getPayload() : substr($message->getPayload(), 0, 50) . '...';
+                    $this->outputLine('<success>Successfully executed job "%s" (%s)</success>', [$message->getIdentifier(), $messagePayload]);
+                }
+            }
+            if ($exitAfter !== null && (time() - $startTime) >= $exitAfter) {
+                if ($verbose) {
+                    $this->outputLine('Quitting after %d seconds due to <i>--exit-after</i> flag', [time() - $startTime]);
+                }
+                $this->quit();
+            }
+            if ($limit !== null && $numberOfJobExecutions >= $limit) {
+                if ($verbose) {
+                    $this->outputLine('Quitting after %d executed job%s due to <i>--limit</i> flag', [$numberOfJobExecutions, $numberOfJobExecutions > 1 ? 's' : '']);
+                }
+                $this->quit();
+            }
+
+        } while (true);
+    }
+
+    /**
      * Flush the index queue
      */
     public function flushCommand()
@@ -117,6 +176,9 @@ class NodeIndexQueueCommandController extends CommandController
         $this->outputLine();
     }
 
+    /**
+     * Output system report for CLI commands
+     */
     protected function outputSystemReport()
     {
         $this->outputLine();
