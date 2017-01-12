@@ -161,7 +161,7 @@ class NodeIndexQueueCommandController extends CommandController
             $this->persistenceManager->clearState();
         }
         $this->outputLine();
-        $this->outputLine("\nNumber of Nodes be indexed in workspace '%s': %d", [$workspaceName, $nodeCounter]);
+        $this->outputLine("\nNumber of Nodes to be indexed in workspace '%s': %d", [$workspaceName, $nodeCounter]);
         $this->outputLine();
     }
 
