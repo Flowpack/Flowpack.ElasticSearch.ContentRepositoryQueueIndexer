@@ -162,14 +162,15 @@ class NodeIndexQueueCommandController extends CommandController
     }
 
     /**
-     * Create next index
      * @param string $indexPostfix
+     * @return string
      */
     protected function createNextIndex($indexPostfix)
     {
         $this->nodeIndexer->setIndexNamePostfix($indexPostfix);
         $this->nodeIndexer->getIndex()->create();
         $this->log(sprintf('action=indexing step=index-created index=%s', $this->nodeIndexer->getIndexName()), LOG_INFO);
+        return $this->nodeIndexer->getIndexName();
     }
 
     /**
