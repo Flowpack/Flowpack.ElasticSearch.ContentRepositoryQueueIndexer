@@ -2,7 +2,6 @@
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
 
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
-use Flowpack\ElasticSearch\ContentRepositoryAdaptor\LoggerInterface;
 use Flowpack\JobQueue\Common\Job\JobInterface;
 use Flowpack\JobQueue\Common\Queue\Message;
 use Flowpack\JobQueue\Common\Queue\QueueInterface;
@@ -14,17 +13,13 @@ use TYPO3\Flow\Utility\Algorithms;
  */
 class UpdateAliasJob implements JobInterface
 {
+    use LoggerTrait;
+
     /**
      * @var NodeIndexer
      * @Flow\Inject
      */
     protected $nodeIndexer;
-
-    /**
-     * @var LoggerInterface
-     * @Flow\Inject
-     */
-    protected $logger;
 
     /**
      * @var string
@@ -57,7 +52,7 @@ class UpdateAliasJob implements JobInterface
     {
         $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
         $this->nodeIndexer->updateIndexAlias();
-        $this->logger->log(sprintf('action=indexing step=index-switched alias=%s', $this->indexPostfix), LOG_NOTICE);
+        $this->log(sprintf('action=indexing step=index-switched alias=%s', $this->indexPostfix), LOG_NOTICE);
 
         return true;
     }

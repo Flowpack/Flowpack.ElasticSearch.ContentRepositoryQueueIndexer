@@ -2,10 +2,10 @@
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Command;
 
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
-use Flowpack\ElasticSearch\ContentRepositoryAdaptor\LoggerInterface;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Mapping\NodeTypeMappingBuilder;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
+use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\LoggerTrait;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\UpdateAliasJob;
 use Flowpack\JobQueue\Common\Job\JobManager;
 use TYPO3\Flow\Annotations as Flow;
@@ -20,6 +20,8 @@ use TYPO3\TYPO3CR\Domain\Repository\WorkspaceRepository;
  */
 class NodeIndexQueueCommandController extends CommandController
 {
+    use LoggerTrait;
+
     /**
      * @Flow\Inject
      * @var JobManager
@@ -55,12 +57,6 @@ class NodeIndexQueueCommandController extends CommandController
      * @var NodeIndexer
      */
     protected $nodeIndexer;
-
-    /**
-     * @Flow\Inject
-     * @var LoggerInterface
-     */
-    protected $logger;
 
     /**
      * Index all nodes by creating a new index and when everything was completed, switch the index alias.
@@ -137,7 +133,7 @@ class NodeIndexQueueCommandController extends CommandController
     {
         $this->nodeIndexer->setIndexNamePostfix($indexPostfix);
         $this->nodeIndexer->getIndex()->create();
-        $this->logger->log(sprintf('action=indexing step=index-created index=%s', $this->nodeIndexer->getIndexName()), LOG_INFO);
+        $this->log(sprintf('action=indexing step=index-created index=%s', $this->nodeIndexer->getIndexName()), LOG_INFO);
     }
 
     /**
@@ -150,6 +146,6 @@ class NodeIndexQueueCommandController extends CommandController
             /** @var \Flowpack\ElasticSearch\Domain\Model\Mapping $mapping */
             $mapping->apply();
         }
-        $this->logger->log(sprintf('action=indexing step=mapping-updated index=%s', $this->nodeIndexer->getIndexName()), LOG_INFO);
+        $this->log(sprintf('action=indexing step=mapping-updated index=%s', $this->nodeIndexer->getIndexName()), LOG_INFO);
     }
 }
