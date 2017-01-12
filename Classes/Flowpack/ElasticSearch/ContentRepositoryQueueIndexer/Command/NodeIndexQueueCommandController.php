@@ -128,6 +128,8 @@ class NodeIndexQueueCommandController extends CommandController
      */
     protected function indexWorkspace($workspaceName, $indexPostfix)
     {
+        $this->outputLine('<info>++</info> Indexing %s workspace', [$workspaceName]);
+        $nodeCounter = 0;
         $offset = 0;
         $batchSize = 250;
         while (true) {
@@ -140,6 +142,7 @@ class NodeIndexQueueCommandController extends CommandController
                     'nodeIdentifier' => $data['nodeIdentifier'],
                     'dimensions' => $data['dimensions']
                 ];
+                $nodeCounter++;
             }
 
             if ($jobData === []) {
@@ -147,11 +150,13 @@ class NodeIndexQueueCommandController extends CommandController
             }
 
             $indexingJob = new IndexingJob($indexPostfix, $workspaceName, $jobData);
-            $this->jobManager->queue('Flowpack.ElasticSearch.ContentRepositoryQueueIndexer', $indexingJob);
+            $this->jobManager->queue(self::QUEUE_NAME, $indexingJob);
             $this->output('.');
             $offset += $batchSize;
             $this->persistenceManager->clearState();
         }
+        $this->outputLine();
+        $this->outputLine("\nNumber of Nodes be indexed in workspace '%s': %d", [$workspaceName, $nodeCounter]);
         $this->outputLine();
     }
 
