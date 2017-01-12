@@ -28,8 +28,8 @@ class NodeIndexQueueCommandController extends CommandController
     const QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
 
     /**
-     * @Flow\Inject
      * @var JobManager
+     * @Flow\Inject
      */
     protected $jobManager;
 
@@ -46,26 +46,26 @@ class NodeIndexQueueCommandController extends CommandController
     protected $persistenceManager;
 
     /**
-     * @Flow\Inject
      * @var NodeTypeMappingBuilder
+     * @Flow\Inject
      */
     protected $nodeTypeMappingBuilder;
 
     /**
-     * @Flow\Inject
      * @var NodeDataRepository
+     * @Flow\Inject
      */
     protected $nodeDataRepository;
 
     /**
-     * @Flow\Inject
      * @var WorkspaceRepository
+     * @Flow\Inject
      */
     protected $workspaceRepository;
 
     /**
-     * @Flow\Inject
      * @var NodeIndexer
+     * @Flow\Inject
      */
     protected $nodeIndexer;
 
@@ -77,30 +77,34 @@ class NodeIndexQueueCommandController extends CommandController
     public function buildCommand($workspace = null)
     {
         $indexPostfix = time();
-        $this->createNextIndex($indexPostfix);
+        $indexName = $this->createNextIndex($indexPostfix);
         $this->updateMapping();
 
+        $this->outputLine();
+        $this->outputLine('<b>Indexing on %s ...</b>', [$indexName]);
 
-        $this->outputLine(sprintf('Indexing on %s ... ', $indexPostfix));
+        $pendingJobs = $this->queueManager->getQueue(self::QUEUE_NAME)->count();
+        if ($pendingJobs !== 0) {
+            $this->outputLine('<error>!! </error> The queue "%s" is not empty (%d pending jobs), please flush the queue.', [self::QUEUE_NAME, $pendingJobs]);
+            $this->quit(1);
+        }
 
         if ($workspace === null) {
             foreach ($this->workspaceRepository->findAll() as $workspace) {
                 $workspace = $workspace->getName();
                 $this->outputLine();
-                $this->outputLine(sprintf('<info>++</info> Indexing %s workspace', $workspace));
                 $this->indexWorkspace($workspace, $indexPostfix);
             }
         } else {
             $this->outputLine();
-            $this->outputLine(sprintf('<info>++</info> Indexing only %s workspace', $workspace));
             $this->indexWorkspace($workspace, $indexPostfix);
         }
         $updateAliasJob = new UpdateAliasJob($indexPostfix);
-        $queueName = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
-        $this->jobManager->queue($queueName, $updateAliasJob);
+        $this->jobManager->queue(self::QUEUE_NAME, $updateAliasJob);
 
+        $this->outputLine("Indexing jobs created for queue %s with success ...", [self::QUEUE_NAME]);
+        $this->outputSystemReport();
         $this->outputLine();
-        $this->outputLine(sprintf('Indexing jobs created for queue %s with success ...', $queueName));
     }
 
     /**
