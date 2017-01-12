@@ -8,9 +8,11 @@ use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\LoggerTrait;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\UpdateAliasJob;
 use Flowpack\JobQueue\Common\Job\JobManager;
+use Flowpack\JobQueue\Common\Queue\QueueManager;
 use TYPO3\Flow\Annotations as Flow;
 use TYPO3\Flow\Cli\CommandController;
 use TYPO3\Flow\Persistence\PersistenceManagerInterface;
+use TYPO3\Flow\Utility\Files;
 use TYPO3\TYPO3CR\Domain\Repository\WorkspaceRepository;
 
 /**
@@ -22,11 +24,19 @@ class NodeIndexQueueCommandController extends CommandController
 {
     use LoggerTrait;
 
+    const QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
+
     /**
      * @Flow\Inject
      * @var JobManager
      */
     protected $jobManager;
+
+    /**
+     * @var QueueManager
+     * @Flow\Inject
+     */
+    protected $queueManager;
 
     /**
      * @var PersistenceManagerInterface
@@ -90,6 +100,26 @@ class NodeIndexQueueCommandController extends CommandController
 
         $this->outputLine();
         $this->outputLine(sprintf('Indexing jobs created for queue %s with success ...', $queueName));
+    }
+
+    /**
+     * Flush the index queue
+     */
+    public function flushCommand()
+    {
+        $this->queueManager->getQueue(self::QUEUE_NAME)->flush();
+        $this->outputSystemReport();
+        $this->outputLine();
+    }
+
+    protected function outputSystemReport()
+    {
+        $this->outputLine();
+        $this->outputLine('Memory Usage   : %s', [Files::bytesToSizeString(memory_get_peak_usage(true))]);
+        $time = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
+        $this->outputLine('Execution time : %s seconds', [$time]);
+        $this->outputLine('Indexing Queue : %s', [self::QUEUE_NAME]);
+        $this->outputLine('Pending Jobs   : %s', [$this->queueManager->getQueue(self::QUEUE_NAME)->count()]);
     }
 
     /**
