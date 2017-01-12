@@ -7,6 +7,7 @@ use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeD
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\LoggerTrait;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\UpdateAliasJob;
+use Flowpack\ElasticSearch\Domain\Model\Mapping;
 use Flowpack\JobQueue\Common\Job\JobManager;
 use Flowpack\JobQueue\Common\Queue\QueueManager;
 use TYPO3\Flow\Annotations as Flow;
@@ -178,7 +179,7 @@ class NodeIndexQueueCommandController extends CommandController
     {
         $nodeTypeMappingCollection = $this->nodeTypeMappingBuilder->buildMappingInformation($this->nodeIndexer->getIndex());
         foreach ($nodeTypeMappingCollection as $mapping) {
-            /** @var \Flowpack\ElasticSearch\Domain\Model\Mapping $mapping */
+            /** @var Mapping $mapping */
             $mapping->apply();
         }
         $this->log(sprintf('action=indexing step=mapping-updated index=%s', $this->nodeIndexer->getIndexName()), LOG_INFO);
