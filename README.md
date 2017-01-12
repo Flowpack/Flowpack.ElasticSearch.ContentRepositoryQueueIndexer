@@ -3,17 +3,32 @@
 This package can be used to index a huge amount of nodes in ElasticSearch indexes. This 
 package use Beanstalkd and the JobQueue package to handle ES indexing asynchronously.
 
-How to build indexing job
--------------------------
+## Batch Indexing
+
+### How to build indexing job
 
     flow nodeindexqueue:build --workspace live
     
-How to process indexing job
----------------------------
+### How to process indexing job
 
 You can use this CLI command to process indexing job:
 
-    flow nodeindexqueue:work
+    flow nodeindexqueue:work --queue batch
+
+## Live Indexing
+
+You can enable async live indexing by editing ```Settings.yaml```:
+
+    Flowpack:
+      ElasticSearch:
+        ContentRepositoryQueueIndexer:
+          enableLiveAsyncIndexing: true
+          
+You can use this CLI command to process indexing job:
+
+    flow nodeindexqueue:work --queue live          
+
+## Supervisord configuration
 
 You can use tools like ```supervisord``` to manage long runing process. Bellow you can
 found a basic configuration:
@@ -22,12 +37,23 @@ found a basic configuration:
    
     [supervisorctl]
    
-    [program:elasticsearch_indexing]
-    command=php flow job:work --queue Flowpack.ElasticSearch.ContentRepositoryQueueIndexer --limit 5000
+    [program:elasticsearch_batch_indexing]
+    command=php flow nodeindexqueue:work --queue batch
     stdout_logfile=AUTO
     stderr_logfile=AUTO
-    numprocs=12
-    process_name=elasticsearch_indexing_%(process_num)02d
+    numprocs=4
+    process_name=elasticsearch_batch_indexing_%(process_num)02d
+    environment=FLOW_CONTEXT="Production"
+    autostart=true
+    autorestart=true
+    stopsignal=QUIT
+    
+    [program:elasticsearch_live_indexing]
+    command=php flow nodeindexqueue:live --queue live
+    stdout_logfile=AUTO
+    stderr_logfile=AUTO
+    numprocs=4
+    process_name=elasticsearch_live_indexing_%(process_num)02d
     environment=FLOW_CONTEXT="Production"
     autostart=true
     autorestart=true

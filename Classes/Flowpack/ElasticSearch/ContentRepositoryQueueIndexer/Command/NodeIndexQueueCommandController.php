@@ -26,7 +26,8 @@ class NodeIndexQueueCommandController extends CommandController
 {
     use LoggerTrait;
 
-    const QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
+    const BATCH_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
+    const LIVE_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live';
 
     /**
      * @var JobManager
@@ -84,9 +85,9 @@ class NodeIndexQueueCommandController extends CommandController
         $this->outputLine();
         $this->outputLine('<b>Indexing on %s ...</b>', [$indexName]);
 
-        $pendingJobs = $this->queueManager->getQueue(self::QUEUE_NAME)->count();
+        $pendingJobs = $this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->count();
         if ($pendingJobs !== 0) {
-            $this->outputLine('<error>!! </error> The queue "%s" is not empty (%d pending jobs), please flush the queue.', [self::QUEUE_NAME, $pendingJobs]);
+            $this->outputLine('<error>!! </error> The queue "%s" is not empty (%d pending jobs), please flush the queue.', [self::BATCH_QUEUE_NAME, $pendingJobs]);
             $this->quit(1);
         }
 
@@ -101,38 +102,50 @@ class NodeIndexQueueCommandController extends CommandController
             $this->indexWorkspace($workspace, $indexPostfix);
         }
         $updateAliasJob = new UpdateAliasJob($indexPostfix);
-        $this->jobManager->queue(self::QUEUE_NAME, $updateAliasJob);
+        $this->jobManager->queue(self::BATCH_QUEUE_NAME, $updateAliasJob);
 
-        $this->outputLine("Indexing jobs created for queue %s with success ...", [self::QUEUE_NAME]);
+        $this->outputLine("Indexing jobs created for queue %s with success ...", [self::BATCH_QUEUE_NAME]);
         $this->outputSystemReport();
         $this->outputLine();
     }
 
     /**
+     * @param string $queue Type of queue to process, can be "live" or "batch"
      * @param int $exitAfter If set, this command will exit after the given amount of seconds
      * @param int $limit If set, only the given amount of jobs are processed (successful or not) before the script exits
      * @param bool $verbose Output debugging information
      * @return void
      */
-    public function workCommand($exitAfter = null, $limit = null, $verbose = false)
+    public function workCommand($queue = 'batch', $exitAfter = null, $limit = null, $verbose = false)
     {
+        $allowedQueues = [
+            'batch' => self::BATCH_QUEUE_NAME,
+            'live' => self::LIVE_QUEUE_NAME
+        ];
+        if (!isset($allowedQueues[$queue])) {
+            $this->output('Invalid queue, should be "live" or "batch"');
+        }
+        $queueName = $allowedQueues[$queue];
+
         if ($verbose) {
-            $this->output('Watching queue <b>"%s"</b>', [self::QUEUE_NAME]);
+            $this->output('Watching queue <b>"%s"</b>', [$queueName]);
             if ($exitAfter !== null) {
                 $this->output(' for <b>%d</b> seconds', [$exitAfter]);
             }
             $this->outputLine('...');
         }
+
         $startTime = time();
         $timeout = null;
         $numberOfJobExecutions = 0;
+
         do {
             $message = null;
             if ($exitAfter !== null) {
                 $timeout = max(1, $exitAfter - (time() - $startTime));
             }
             try {
-                $message = $this->jobManager->waitAndExecute(self::QUEUE_NAME, $timeout);
+                $message = $this->jobManager->waitAndExecute($queueName, $timeout);
             } catch (JobQueueException $exception) {
                 $numberOfJobExecutions ++;
                 $this->outputLine('<error>%s</error>', [$exception->getMessage()]);
@@ -171,7 +184,7 @@ class NodeIndexQueueCommandController extends CommandController
      */
     public function flushCommand()
     {
-        $this->queueManager->getQueue(self::QUEUE_NAME)->flush();
+        $this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->flush();
         $this->outputSystemReport();
         $this->outputLine();
     }
@@ -185,8 +198,8 @@ class NodeIndexQueueCommandController extends CommandController
         $this->outputLine('Memory Usage   : %s', [Files::bytesToSizeString(memory_get_peak_usage(true))]);
         $time = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
         $this->outputLine('Execution time : %s seconds', [$time]);
-        $this->outputLine('Indexing Queue : %s', [self::QUEUE_NAME]);
-        $this->outputLine('Pending Jobs   : %s', [$this->queueManager->getQueue(self::QUEUE_NAME)->count()]);
+        $this->outputLine('Indexing Queue : %s', [self::BATCH_QUEUE_NAME]);
+        $this->outputLine('Pending Jobs   : %s', [$this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->count()]);
     }
 
     /**
@@ -217,7 +230,7 @@ class NodeIndexQueueCommandController extends CommandController
             }
 
             $indexingJob = new IndexingJob($indexPostfix, $workspaceName, $jobData);
-            $this->jobManager->queue(self::QUEUE_NAME, $indexingJob);
+            $this->jobManager->queue(self::BATCH_QUEUE_NAME, $indexingJob);
             $this->output('.');
             $offset += $batchSize;
             $this->persistenceManager->clearState();
