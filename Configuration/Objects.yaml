@@ -1,0 +1,2 @@
+TYPO3\TYPO3CR\Search\Indexer\NodeIndexerInterface:
+  className: Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Indexer\NodeIndexer

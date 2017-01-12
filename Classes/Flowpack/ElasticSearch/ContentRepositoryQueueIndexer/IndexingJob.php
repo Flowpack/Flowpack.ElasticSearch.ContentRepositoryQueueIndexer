@@ -2,12 +2,11 @@
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
 
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
+use Flowpack\JobQueue\Common\Job\JobInterface;
+use Flowpack\JobQueue\Common\Queue\Message;
+use Flowpack\JobQueue\Common\Queue\QueueInterface;
 use TYPO3\Flow\Annotations as Flow;
-use TYPO3\Flow\Log\SystemLoggerInterface;
 use TYPO3\Flow\Utility\Algorithms;
-use TYPO3\Jobqueue\Common\Job\JobInterface;
-use TYPO3\Jobqueue\Common\Queue\Message;
-use TYPO3\Jobqueue\Common\Queue\QueueInterface;
 use TYPO3\TYPO3CR\Domain\Factory\NodeFactory;
 use TYPO3\TYPO3CR\Domain\Model\NodeData;
 use TYPO3\TYPO3CR\Domain\Model\NodeInterface;
@@ -19,6 +18,7 @@ use TYPO3\TYPO3CR\Domain\Service\ContextFactory;
  */
 class IndexingJob implements JobInterface
 {
+    use LoggerTrait;
 
     /**
      * @var NodeIndexer
@@ -43,12 +43,6 @@ class IndexingJob implements JobInterface
      * @Flow\Inject
      */
     protected $contextFactory;
-
-    /**
-     * @var SystemLoggerInterface
-     * @Flow\Inject
-     */
-    protected $logger;
 
     /**
      * @var string
@@ -94,6 +88,8 @@ class IndexingJob implements JobInterface
     public function execute(QueueInterface $queue, Message $message)
     {
         $this->nodeIndexer->withBulkProcessing(function () {
+            $numberOfNodes = count($this->nodes);
+            $startTime = microtime(true);
             foreach ($this->nodes as $node) {
                 /** @var NodeData $nodeData */
                 $nodeData = $this->nodeDataRepository->findByIdentifier($node['nodeIdentifier']);
@@ -107,18 +103,20 @@ class IndexingJob implements JobInterface
 
                 // Skip this iteration if the node can not be fetched from the current context
                 if (!$currentNode instanceof NodeInterface) {
-                    $this->logger->log(sprintf('Node with identifier %s could not be processed', $node['nodeIdentifier']));
+                    $this->log(sprintf('action=indexing step=failed node=%s message="Node could not be processed"', $node['nodeIdentifier']));
                     continue;
                 }
 
                 $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
-                $this->logger->log(sprintf('Process indexing job for %s', $currentNode));
+                $this->log(sprintf('action=indexing step=started node=%s', $currentNode->getIdentifier()));
 
                 $this->nodeIndexer->indexNode($currentNode);
-
             }
 
             $this->nodeIndexer->flush();
+            $duration = microtime(true) - $startTime;
+            $rate = $numberOfNodes / $duration;
+            $this->log(sprintf('action=indexing step=finished number_of_nodes=%d duration=%f nodes_per_second=%f', $numberOfNodes, $duration, $rate));
         });
 
         return true;
@@ -143,5 +141,4 @@ class IndexingJob implements JobInterface
     {
         return sprintf('ElasticSearch Indexing Job (%s)', $this->getIdentifier());
     }
-
 }
