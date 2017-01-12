@@ -23,7 +23,7 @@ found a basic configuration:
     [supervisorctl]
    
     [program:elasticsearch_indexing]
-    command=php flow job:work --queue-name Flowpack.ElasticSearch.ContentRepositoryQueueIndexer --limit 5000
+    command=php flow job:work --queue Flowpack.ElasticSearch.ContentRepositoryQueueIndexer --limit 5000
     stdout_logfile=AUTO
     stderr_logfile=AUTO
     numprocs=12
