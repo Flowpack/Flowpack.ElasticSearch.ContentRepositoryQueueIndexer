@@ -6,6 +6,7 @@ use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Command\NodeIndexQueueC
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
 use Flowpack\JobQueue\Common\Job\JobManager;
 use TYPO3\Flow\Annotations as Flow;
+use TYPO3\Flow\Persistence\PersistenceManagerInterface;
 use TYPO3\TYPO3CR\Domain\Model\NodeInterface;
 
 /**
@@ -18,6 +19,12 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
      * @Flow\Inject
      */
     protected $jobManager;
+
+    /**
+     * @var PersistenceManagerInterface
+     * @Flow\Inject
+     */
+    protected $persistenceManager;
 
     /**
      * @var bool
