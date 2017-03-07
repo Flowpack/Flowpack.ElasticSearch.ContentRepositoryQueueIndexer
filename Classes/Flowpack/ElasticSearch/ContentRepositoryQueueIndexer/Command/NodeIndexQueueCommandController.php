@@ -103,7 +103,7 @@ class NodeIndexQueueCommandController extends CommandController
     protected function indexWorkspace($workspaceName, $indexPostfix)
     {
         $offset = 0;
-        $batchSize = 20;
+        $batchSize = 1500;
         while (true) {
             $iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $batchSize);
 
