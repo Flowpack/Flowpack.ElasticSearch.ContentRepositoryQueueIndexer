@@ -73,7 +73,6 @@ class NodeIndexQueueCommandController extends CommandController
         $this->createNextIndex($indexPostfix);
         $this->updateMapping();
 
-
         $this->outputLine(sprintf('Indexing on %s ... ', $indexPostfix));
 
         if ($workspace === null) {
@@ -103,7 +102,7 @@ class NodeIndexQueueCommandController extends CommandController
     protected function indexWorkspace($workspaceName, $indexPostfix)
     {
         $offset = 0;
-        $batchSize = 1500;
+        $batchSize = 500;
         while (true) {
             $iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $batchSize);
 
