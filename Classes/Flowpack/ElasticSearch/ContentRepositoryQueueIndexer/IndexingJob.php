@@ -2,16 +2,16 @@
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
 
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
+use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
 use Flowpack\JobQueue\Common\Job\JobInterface;
 use Flowpack\JobQueue\Common\Queue\Message;
 use Flowpack\JobQueue\Common\Queue\QueueInterface;
-use TYPO3\Flow\Annotations as Flow;
-use TYPO3\Flow\Utility\Algorithms;
-use TYPO3\TYPO3CR\Domain\Factory\NodeFactory;
-use TYPO3\TYPO3CR\Domain\Model\NodeData;
-use TYPO3\TYPO3CR\Domain\Model\NodeInterface;
-use TYPO3\TYPO3CR\Domain\Repository\NodeDataRepository;
-use TYPO3\TYPO3CR\Domain\Service\ContextFactory;
+use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Log\SystemLoggerInterface;
+use Neos\Flow\Utility\Algorithms;
+use Neos\ContentRepository\Domain\Factory\NodeFactory;
+use Neos\ContentRepository\Domain\Model\NodeInterface;
+use Neos\ContentRepository\Domain\Service\ContextFactoryInterface;
 
 /**
  * ElasticSearch Indexing Job Interface
@@ -39,7 +39,7 @@ class IndexingJob implements JobInterface
     protected $nodeFactory;
 
     /**
-     * @var ContextFactory
+     * @var ContextFactoryInterface
      * @Flow\Inject
      */
     protected $contextFactory;
