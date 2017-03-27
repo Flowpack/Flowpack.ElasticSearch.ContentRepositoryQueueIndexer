@@ -49,7 +49,7 @@ found a basic configuration:
     stopsignal=QUIT
     
     [program:elasticsearch_live_indexing]
-    command=php flow nodeindexqueue:live --queue live
+    command=php flow nodeindexqueue:work --queue live
     stdout_logfile=AUTO
     stderr_logfile=AUTO
     numprocs=4
