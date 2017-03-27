@@ -2,17 +2,18 @@
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Command;
 
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
-use Flowpack\ElasticSearch\ContentRepositoryAdaptor\LoggerInterface;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Mapping\NodeTypeMappingBuilder;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\LoggerTrait;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\UpdateAliasJob;
 use Flowpack\JobQueue\Common\Job\JobManager;
+use Flowpack\JobQueue\Common\Queue\QueueManager;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Cli\CommandController;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
+use Neos\Utility\Files;
 
 /**
  * Provides CLI features for index handling
