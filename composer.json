@@ -6,7 +6,7 @@
   "require": {
     "flowpack/jobqueue-beanstalkd": "^3.0.0",
     "flowpack/elasticsearch-contentrepositoryadaptor": "^2.0.0",
-    "neos/content-repository-search": "^2.1.0"
+    "neos/content-repository-search": "^3.0.0"
   },
   "autoload": {
     "psr-0": {
