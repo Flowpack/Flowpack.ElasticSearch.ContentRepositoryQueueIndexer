@@ -4,7 +4,7 @@
   "description": "Neos CMS ElasticSearch indexer based on beanstalkd (job queue)",
   "license": "MIT",
   "require": {
-    "flowpack/jobqueue-beanstalkd": "^2.0.0",
+    "flowpack/jobqueue-beanstalkd": "^3.0.0",
     "flowpack/elasticsearch-contentrepositoryadaptor": "^2.0.0",
     "neos/content-repository-search": "^2.1.0"
   },
