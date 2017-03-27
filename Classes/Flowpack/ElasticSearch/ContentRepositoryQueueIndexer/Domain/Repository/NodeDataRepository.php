@@ -3,18 +3,16 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository
 
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Internal\Hydration\IterableResult;
-use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
-use TYPO3\Flow\Annotations as Flow;
-use TYPO3\Flow\Persistence\Repository;
-use TYPO3\TYPO3CR\Exception;
+use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Persistence\Repository;
 
 /**
  * @Flow\Scope("singleton")
  */
 class NodeDataRepository extends Repository
 {
-    const ENTITY_CLASSNAME = 'TYPO3\TYPO3CR\Domain\Model\NodeData';
+    const ENTITY_CLASSNAME = 'Neos\ContentRepository\Domain\Model\NodeData';
 
     /**
      * @Flow\Inject
@@ -35,7 +33,7 @@ class NodeDataRepository extends Repository
         $queryBuilder = $this->entityManager->createQueryBuilder();
 
         $queryBuilder->select('n.Persistence_Object_Identifier nodeIdentifier, n.dimensionValues dimensions')
-            ->from('TYPO3\TYPO3CR\Domain\Model\NodeData', 'n')
+            ->from('Neos\ContentRepository\Domain\Model\NodeData', 'n')
             ->where("n.workspace = :workspace AND n.removed = :removed AND n.movedTo IS NULL")
             ->setFirstResult((integer)$firstResult)
             ->setMaxResults((integer)$maxResults)
@@ -50,7 +48,7 @@ class NodeDataRepository extends Repository
     /**
      * Iterator over an IterableResult and return a Generator
      *
-     * This methos is useful for batch processing huge result set as it clear the object
+     * This method is useful for batch processing huge result set as it clear the object
      * manager and detach the current object on each iteration.
      *
      * @param IterableResult $iterator
