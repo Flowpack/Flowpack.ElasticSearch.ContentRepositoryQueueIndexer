@@ -3,32 +3,65 @@
 This package can be used to index a huge amount of nodes in ElasticSearch indexes. This 
 package use Beanstalkd and the JobQueue package to handle ES indexing asynchronously.
 
-## Batch Indexing
+# Breaking change after an upgrade to 3.0
 
-### How to build indexing job
+## Install and configure your Queue package
+
+You need to install the correct Queue package based on your needs.
+
+Available packages:
+
+  - [sqlite](https://packagist.org/packages/flownative/jobqueue-sqlite)
+  - [beanstalkd](https://packagist.org/packages/flownative/jobqueue-beanstalkd)
+  - [doctrine](https://packagist.org/packages/flownative/jobqueue-doctrine)
+  - [redis](https://packagist.org/packages/flownative/jobqueue-redis)
+
+Please check the package documentation for specific configurations.
+
+The default configuration use Beanstalkd, but you need to install it manually:
+
+    composer require flowpack/jobqueue-beanstalkd
+    
+Check the ```Settings.yaml``` to adapt based on the Queue package, you need to adapt the ```className```:
+
+    Flowpack:
+      JobQueue:
+        Common:
+          queues:
+            'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
+              className: 'Flowpack\JobQueue\Beanstalkd\Queue\BeanstalkdQueue'
+    
+            'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live':
+              className: 'Flowpack\JobQueue\Beanstalkd\Queue\BeanstalkdQueue'
+
+   
+
+# Batch Indexing
+
+## How to build indexing job
 
     flow nodeindexqueue:build --workspace live
     
-### How to process indexing job
+## How to process indexing job
 
 You can use this CLI command to process indexing job:
 
     flow nodeindexqueue:work --queue batch
 
-## Live Indexing
+# Live Indexing
 
-You can enable async live indexing by editing ```Settings.yaml```:
+You can disable async live indexing by editing ```Settings.yaml```:
 
     Flowpack:
       ElasticSearch:
         ContentRepositoryQueueIndexer:
-          enableLiveAsyncIndexing: true
+          enableLiveAsyncIndexing: false
           
 You can use this CLI command to process indexing job:
 
     flow nodeindexqueue:work --queue live          
 
-## Supervisord configuration
+# Supervisord configuration
 
 You can use tools like ```supervisord``` to manage long runing process. Bellow you can
 found a basic configuration:
