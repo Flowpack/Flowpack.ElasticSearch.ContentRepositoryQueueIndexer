@@ -18,6 +18,8 @@ use Neos\ContentRepository\Domain\Service\ContextFactoryInterface;
  */
 class IndexingJob implements JobInterface
 {
+    use LoggerTrait;
+
     /**
      * @var NodeIndexer
      * @Flow\Inject
@@ -41,12 +43,6 @@ class IndexingJob implements JobInterface
      * @Flow\Inject
      */
     protected $contextFactory;
-
-    /**
-     * @var SystemLoggerInterface
-     * @Flow\Inject
-     */
-    protected $logger;
 
     /**
      * @var string
@@ -107,12 +103,12 @@ class IndexingJob implements JobInterface
 
                 // Skip this iteration if the node can not be fetched from the current context
                 if (!$currentNode instanceof NodeInterface) {
-                    $this->logger->log(sprintf('action=indexing step=failed node=%s message="Node could not be processed"', $node['nodeIdentifier']));
+                    $this->log(sprintf('action=indexing step=failed node=%s message="Node could not be processed"', $node['nodeIdentifier']));
                     continue;
                 }
 
                 $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
-                $this->logger->log(sprintf('action=indexing step=started node=%s', $currentNode->getIdentifier()));
+                $this->log(sprintf('action=indexing step=started node=%s', $currentNode->getIdentifier()));
 
                 $this->nodeIndexer->indexNode($currentNode);
             }
@@ -120,7 +116,7 @@ class IndexingJob implements JobInterface
             $this->nodeIndexer->flush();
             $duration = microtime(true) - $startTime;
             $rate = $numberOfNodes / $duration;
-            $this->logger->log(sprintf('action=indexing step=finished number_of_nodes=%d duration=%f nodes_per_second=%f', $numberOfNodes, $duration, $rate));
+            $this->log(sprintf('action=indexing step=finished number_of_nodes=%d duration=%f nodes_per_second=%f', $numberOfNodes, $duration, $rate));
         });
 
         return true;
