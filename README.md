@@ -1,11 +1,14 @@
-# Neos CMS ElasticSearch indexer based on beanstalkd (job queue)
+# Neos CMS Elasticsearch indexer based on a job queue
 
-This package can be used to index a huge amount of nodes in ElasticSearch indexes. This 
-package use Beanstalkd and the JobQueue package to handle ES indexing asynchronously.
+This package can be used to index a huge amount of nodes in Elasticsearch indexes. This
+package use the Flowpack JobQueue packages to handle the indexing asynchronously.
 
 # Breaking change after an upgrade to 3.0
 
-## Install and configure your Queue package
+Previously the Beanstalk queue package was installed by default, this is no longer
+the case.
+
+# Install and configure your Queue package
 
 You need to install the correct Queue package based on your needs.
 
@@ -18,10 +21,10 @@ Available packages:
 
 Please check the package documentation for specific configurations.
 
-The default configuration use Beanstalkd, but you need to install it manually:
+The default configuration uses Beanstalkd, but you need to install it manually:
 
     composer require flowpack/jobqueue-beanstalkd
-    
+
 Check the ```Settings.yaml``` to adapt based on the Queue package, you need to adapt the ```className```:
 
     Flowpack:
@@ -30,18 +33,16 @@ Check the ```Settings.yaml``` to adapt based on the Queue package, you need to a
           queues:
             'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
               className: 'Flowpack\JobQueue\Beanstalkd\Queue\BeanstalkdQueue'
-    
+
             'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live':
               className: 'Flowpack\JobQueue\Beanstalkd\Queue\BeanstalkdQueue'
-
-   
 
 # Batch Indexing
 
 ## How to build indexing job
 
     flow nodeindexqueue:build --workspace live
-    
+
 ## How to process indexing job
 
 You can use this CLI command to process indexing job:
@@ -56,10 +57,10 @@ You can disable async live indexing by editing ```Settings.yaml```:
       ElasticSearch:
         ContentRepositoryQueueIndexer:
           enableLiveAsyncIndexing: false
-          
+
 You can use this CLI command to process indexing job:
 
-    flow nodeindexqueue:work --queue live          
+    flow nodeindexqueue:work --queue live
 
 # Supervisord configuration
 
@@ -67,9 +68,9 @@ You can use tools like ```supervisord``` to manage long runing process. Bellow y
 found a basic configuration:
 
     [supervisord]
-   
+
     [supervisorctl]
-   
+
     [program:elasticsearch_batch_indexing]
     command=php flow nodeindexqueue:work --queue batch
     stdout_logfile=AUTO
@@ -80,7 +81,7 @@ found a basic configuration:
     autostart=true
     autorestart=true
     stopsignal=QUIT
-    
+
     [program:elasticsearch_live_indexing]
     command=php flow nodeindexqueue:work --queue live
     stdout_logfile=AUTO
