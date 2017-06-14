@@ -6,8 +6,8 @@ use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeD
 use Flowpack\JobQueue\Common\Job\JobInterface;
 use Flowpack\JobQueue\Common\Queue\Message;
 use Flowpack\JobQueue\Common\Queue\QueueInterface;
+use Neos\ContentRepository\Domain\Model\NodeData;
 use Neos\Flow\Annotations as Flow;
-use Neos\Flow\Log\SystemLoggerInterface;
 use Neos\Flow\Utility\Algorithms;
 use Neos\ContentRepository\Domain\Factory\NodeFactory;
 use Neos\ContentRepository\Domain\Model\NodeInterface;
