@@ -34,7 +34,7 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
 
     /**
      * @param NodeInterface $node
-     * @param string|null $targetWorkspaceName
+     * @param string|null $targetWorkspaceName In case indexing is triggered during publishing, a target workspace name will be passed in
      */
     public function indexNode(NodeInterface $node, $targetWorkspaceName = null)
     {
