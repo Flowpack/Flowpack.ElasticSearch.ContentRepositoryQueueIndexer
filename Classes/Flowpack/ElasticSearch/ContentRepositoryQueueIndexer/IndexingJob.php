@@ -95,7 +95,7 @@ class IndexingJob implements JobInterface
                 /** @var NodeData $nodeData */
                 $nodeData = $this->nodeDataRepository->findByIdentifier($node['nodeIdentifier']);
                 $context = $this->contextFactory->create([
-                    'workspaceName' => $this->targetWorkspaceName,
+                    'workspaceName' => $this->targetWorkspaceName ?: $nodeData->getWorkspace()->getName(),
                     'invisibleContentShown' => true,
                     'inaccessibleContentShown' => false,
                     'dimensions' => $node['dimensions']
