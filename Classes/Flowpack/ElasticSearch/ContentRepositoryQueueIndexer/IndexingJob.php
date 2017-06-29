@@ -92,6 +92,13 @@ class IndexingJob implements JobInterface
             foreach ($this->nodes as $node) {
                 /** @var NodeData $nodeData */
                 $nodeData = $this->nodeDataRepository->findByIdentifier($node['nodeIdentifier']);
+
+                // Skip this iteration if the nodedata can not be fetched (deleted node)
+                if (!$nodeData instanceof NodeData) {
+                    $this->log(sprintf('action=indexing step=failed node=%s message="Node data could not be loaded"', $node['nodeIdentifier']));
+                    continue;
+                }
+
                 $context = $this->contextFactory->create([
                     'workspaceName' => $this->targetWorkspaceName ?: $nodeData->getWorkspace()->getName(),
                     'invisibleContentShown' => true,
