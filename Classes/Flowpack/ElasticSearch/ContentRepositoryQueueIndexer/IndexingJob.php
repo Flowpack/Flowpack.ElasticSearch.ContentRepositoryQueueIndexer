@@ -8,14 +8,13 @@ use Flowpack\JobQueue\Common\Queue\Message;
 use Flowpack\JobQueue\Common\Queue\QueueInterface;
 use Neos\ContentRepository\Domain\Model\NodeData;
 use Neos\Flow\Annotations as Flow;
-use Neos\Flow\Log\SystemLoggerInterface;
 use Neos\Flow\Utility\Algorithms;
 use Neos\ContentRepository\Domain\Factory\NodeFactory;
 use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\ContentRepository\Domain\Service\ContextFactoryInterface;
 
 /**
- * ElasticSearch Indexing Job Interface
+ * Elasticsearch Node Indexing Job
  */
 class IndexingJob implements JobInterface
 {
@@ -79,8 +78,7 @@ class IndexingJob implements JobInterface
     }
 
     /**
-     * Execute the job
-     * A job should finish itself after successful execution using the queue methods.
+     * Execute the indexing of nodes
      *
      * @param QueueInterface $queue
      * @param Message $message The original message
@@ -140,6 +138,6 @@ class IndexingJob implements JobInterface
      */
     public function getLabel()
     {
-        return sprintf('ElasticSearch Indexing Job (%s)', $this->getIdentifier());
+        return sprintf('Elasticsearch Indexing Job (%s)', $this->getIdentifier());
     }
 }
