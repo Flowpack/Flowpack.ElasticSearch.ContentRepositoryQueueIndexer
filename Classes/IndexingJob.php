@@ -52,7 +52,7 @@ class IndexingJob implements JobInterface
     /**
      * @var string
      */
-    protected $workspaceName;
+    protected $targetWorkspaceName;
 
     /**
      * @var string
@@ -66,13 +66,13 @@ class IndexingJob implements JobInterface
 
     /**
      * @param string $indexPostfix
-     * @param string $workspaceName
+     * @param string $targetWorkspaceName In case indexing is triggered during publishing, a target workspace name will be passed in
      * @param array $nodes
      */
-    public function __construct($indexPostfix, $workspaceName, array $nodes)
+    public function __construct($indexPostfix, $targetWorkspaceName, array $nodes)
     {
         $this->identifier = Algorithms::generateRandomString(24);
-        $this->workspaceName = $workspaceName;
+        $this->targetWorkspaceName = $targetWorkspaceName;
         $this->indexPostfix = $indexPostfix;
         $this->nodes = $nodes;
     }
@@ -94,7 +94,7 @@ class IndexingJob implements JobInterface
                 /** @var NodeData $nodeData */
                 $nodeData = $this->nodeDataRepository->findByIdentifier($node['nodeIdentifier']);
                 $context = $this->contextFactory->create([
-                    'workspaceName' => $this->workspaceName,
+                    'workspaceName' => $this->targetWorkspaceName ?: $nodeData->getWorkspace()->getName(),
                     'invisibleContentShown' => true,
                     'inaccessibleContentShown' => false,
                     'dimensions' => $node['dimensions']
