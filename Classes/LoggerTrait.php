@@ -1,7 +1,7 @@
 <?php
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
 
-use TYPO3\Flow\Annotations as Flow;
+use Neos\Flow\Annotations as Flow;
 
 /**
  * LoggerTrait
@@ -9,7 +9,7 @@ use TYPO3\Flow\Annotations as Flow;
 trait LoggerTrait
 {
     /**
-     * @var \TYPO3\Flow\Log\SystemLoggerInterface
+     * @var \Neos\Flow\Log\SystemLoggerInterface
      * @Flow\Inject
      */
     protected $_logger;

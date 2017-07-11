@@ -7,15 +7,13 @@ use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeD
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\LoggerTrait;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\UpdateAliasJob;
-use Flowpack\ElasticSearch\Domain\Model\Mapping;
 use Flowpack\JobQueue\Common\Job\JobManager;
 use Flowpack\JobQueue\Common\Queue\QueueManager;
-use TYPO3\Flow\Annotations as Flow;
-use TYPO3\Flow\Cli\CommandController;
-use TYPO3\Flow\Persistence\PersistenceManagerInterface;
-use TYPO3\Flow\Utility\Files;
-use TYPO3\TYPO3CR\Domain\Repository\WorkspaceRepository;
-use Flowpack\JobQueue\Common\Exception as JobQueueException;
+use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Cli\CommandController;
+use Neos\Flow\Persistence\PersistenceManagerInterface;
+use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
+use Neos\Utility\Files;
 
 /**
  * Provides CLI features for index handling
@@ -81,6 +79,7 @@ class NodeIndexQueueCommandController extends CommandController
         $indexPostfix = time();
         $indexName = $this->createNextIndex($indexPostfix);
         $this->updateMapping();
+
 
         $this->outputLine();
         $this->outputLine('<b>Indexing on %s ...</b>', [$indexName]);
@@ -211,7 +210,7 @@ class NodeIndexQueueCommandController extends CommandController
         $this->outputLine('<info>++</info> Indexing %s workspace', [$workspaceName]);
         $nodeCounter = 0;
         $offset = 0;
-        $batchSize = 250;
+        $batchSize = 500;
         while (true) {
             $iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $batchSize);
 

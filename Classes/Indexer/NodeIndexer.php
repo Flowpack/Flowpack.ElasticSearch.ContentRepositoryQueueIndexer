@@ -5,9 +5,9 @@ use Flowpack\ElasticSearch\ContentRepositoryAdaptor;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Command\NodeIndexQueueCommandController;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
 use Flowpack\JobQueue\Common\Job\JobManager;
-use TYPO3\Flow\Annotations as Flow;
-use TYPO3\Flow\Persistence\PersistenceManagerInterface;
-use TYPO3\TYPO3CR\Domain\Model\NodeInterface;
+use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Persistence\PersistenceManagerInterface;
+use Neos\ContentRepository\Domain\Model\NodeInterface;
 
 /**
  * ElasticSearch Indexing Job Interface
@@ -34,7 +34,7 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
 
     /**
      * @param NodeInterface $node
-     * @param string|null $targetWorkspaceName
+     * @param string|null $targetWorkspaceName In case indexing is triggered during publishing, a target workspace name will be passed in
      */
     public function indexNode(NodeInterface $node, $targetWorkspaceName = null)
     {

@@ -1,13 +1,9 @@
 Flowpack:
-
   ElasticSearch:
-
     ContentRepositoryQueueIndexer:
-
       enableLiveAsyncIndexing: true
 
   JobQueue:
-
     Common:
       queues:
         'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
