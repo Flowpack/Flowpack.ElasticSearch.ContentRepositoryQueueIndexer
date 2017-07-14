@@ -31,10 +31,10 @@ Check the ```Settings.yaml``` to adapt based on the Queue package, you need to a
       JobQueue:
         Common:
           queues:
-            'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
+            'Flowpack-ES-NeosCR-QueueIndexer':
               className: 'Flowpack\JobQueue\Beanstalkd\Queue\BeanstalkdQueue'
 
-            'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live':
+            'Flowpack-ES-NeosCR-QueueIndexer-Live':
               className: 'Flowpack\JobQueue\Beanstalkd\Queue\BeanstalkdQueue'
 
 # Batch Indexing
