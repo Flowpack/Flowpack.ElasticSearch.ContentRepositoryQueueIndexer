@@ -26,7 +26,7 @@ trait LoggerTrait
      */
     protected function log($message, $severity = LOG_INFO, $additionalData = null, $packageKey = null, $className = null, $methodName = null)
     {
-        $packageKey = $packageKey ?: 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
+        $packageKey = $packageKey ?: 'Flowpack-ES-NeosCR-QueueIndexer';
         $this->_logger->log($message, $severity, $additionalData, $packageKey, $className, $methodName);
     }
 }
