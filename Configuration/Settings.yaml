@@ -11,12 +11,14 @@ Flowpack:
           className: 'Flowpack\JobQueue\Beanstalkd\Queue\BeanstalkdQueue'
           executeIsolated: true
           options:
-            host: '127.0.0.1'
-            port: 11300
+            client:
+              host: '127.0.0.1'
+              port: 11300
 
         'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live':
           className: 'Flowpack\JobQueue\Beanstalkd\Queue\BeanstalkdQueue'
           executeIsolated: true
           options:
-            host: '127.0.0.1'
-            port: 11300
+            client:
+              host: '127.0.0.1'
+              port: 11300
