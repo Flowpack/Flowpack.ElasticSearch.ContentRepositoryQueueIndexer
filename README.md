@@ -15,9 +15,9 @@ You need to install the correct Queue package based on your needs.
 Available packages:
 
   - [sqlite](https://packagist.org/packages/flownative/jobqueue-sqlite)
-  - [beanstalkd](https://packagist.org/packages/flownative/jobqueue-beanstalkd)
-  - [doctrine](https://packagist.org/packages/flownative/jobqueue-doctrine)
-  - [redis](https://packagist.org/packages/flownative/jobqueue-redis)
+  - [beanstalkd](https://packagist.org/packages/flowpack/jobqueue-beanstalkd)
+  - [doctrine](https://packagist.org/packages/flowpack/jobqueue-doctrine)
+  - [redis](https://packagist.org/packages/flowpack/jobqueue-redis)
 
 Please check the package documentation for specific configurations.
 
