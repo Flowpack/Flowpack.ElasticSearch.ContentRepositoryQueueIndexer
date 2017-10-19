@@ -46,7 +46,9 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
         $indexingJob = new IndexingJob($this->indexNamePostfix, $targetWorkspaceName, [
             [
                 'nodeIdentifier' => $this->persistenceManager->getIdentifierByObject($node->getNodeData()),
-                'dimensions' => $node->getDimensions()
+                'dimensions' => $node->getDimensions(),
+                'nodeType' => $node->getNodeType()->getName(),
+                'contextPath' => $node->getContextPath(),
             ]
         ]);
         $this->jobManager->queue(NodeIndexQueueCommandController::LIVE_QUEUE_NAME, $indexingJob);
@@ -65,7 +67,9 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
         $removalJob = new RemovalJob($this->indexNamePostfix, $targetWorkspaceName, [
             [
                 'nodeIdentifier' => $this->persistenceManager->getIdentifierByObject($node->getNodeData()),
-                'dimensions' => $node->getDimensions()
+                'dimensions' => $node->getDimensions(),
+                'nodeType' => $node->getNodeType()->getName(),
+                'contextPath' => $node->getContextPath(),
             ]
         ]);
         $this->jobManager->queue(NodeIndexQueueCommandController::LIVE_QUEUE_NAME, $removalJob);
