@@ -49,7 +49,6 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
                 'dimensions' => $node->getDimensions(),
                 'workspace' => $node->getWorkspace()->getName(),
                 'nodeType' => $node->getNodeType()->getName(),
-                'contextPath' => $node->getContextPath(),
                 'path' => $node->getPath(),
             ]
         ]);
@@ -72,7 +71,6 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
                 'dimensions' => $node->getDimensions(),
                 'workspace' => $node->getWorkspace()->getName(),
                 'nodeType' => $node->getNodeType()->getName(),
-                'contextPath' => $node->getContextPath(),
                 'path' => $node->getPath(),
             ]
         ]);

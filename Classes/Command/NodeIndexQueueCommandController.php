@@ -220,7 +220,9 @@ class NodeIndexQueueCommandController extends CommandController
                 $jobData[] = [
                     'nodeIdentifier' => $data['nodeIdentifier'],
                     'dimensions' => $data['dimensions'],
+                    'workspace' => $workspaceName,
                     'nodeType' => $data['nodeType'],
+                    'path' => $data['path'],
                 ];
                 $nodeCounter++;
             }
