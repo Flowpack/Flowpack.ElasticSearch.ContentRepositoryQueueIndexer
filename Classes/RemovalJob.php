@@ -1,8 +1,10 @@
 <?php
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
 
+use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
+use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Service\FakeNodeDataFactory;
 use Flowpack\JobQueue\Common\Job\JobInterface;
 use Flowpack\JobQueue\Common\Queue\Message;
 use Flowpack\JobQueue\Common\Queue\QueueInterface;
@@ -16,67 +18,8 @@ use Neos\ContentRepository\Domain\Service\ContextFactoryInterface;
 /**
  * Elasticsearch Node Removal Job
  */
-class RemovalJob implements JobInterface
+class RemovalJob extends AbstractIndexingJob
 {
-    use LoggerTrait;
-
-    /**
-     * @var NodeIndexer
-     * @Flow\Inject
-     */
-    protected $nodeIndexer;
-
-    /**
-     * @var NodeDataRepository
-     * @Flow\Inject
-     */
-    protected $nodeDataRepository;
-
-    /**
-     * @var NodeFactory
-     * @Flow\Inject
-     */
-    protected $nodeFactory;
-
-    /**
-     * @var ContextFactoryInterface
-     * @Flow\Inject
-     */
-    protected $contextFactory;
-
-    /**
-     * @var string
-     */
-    protected $identifier;
-
-    /**
-     * @var string
-     */
-    protected $targetWorkspaceName;
-
-    /**
-     * @var string
-     */
-    protected $indexPostfix;
-
-    /**
-     * @var array
-     */
-    protected $nodes = [];
-
-    /**
-     * @param string $indexPostfix
-     * @param string $targetWorkspaceName In case indexing is triggered during publishing, a target workspace name will be passed in
-     * @param array $nodes
-     */
-    public function __construct($indexPostfix, $targetWorkspaceName, array $nodes)
-    {
-        $this->identifier = Algorithms::generateRandomString(24);
-        $this->targetWorkspaceName = $targetWorkspaceName;
-        $this->indexPostfix = $indexPostfix;
-        $this->nodes = $nodes;
-    }
-
     /**
      * Execute the job removal of nodes.
      *
@@ -95,8 +38,13 @@ class RemovalJob implements JobInterface
 
                 // Skip this iteration if the nodedata can not be fetched (deleted node)
                 if (!$nodeData instanceof NodeData) {
-                    $this->log(sprintf('action=removal step=failed node=%s message="Node data could not be loaded"', $node['nodeIdentifier']));
-                    continue;
+                    try {
+                        $nodeData = $this->fakeNodeDataFactory->createFromPayload($node);
+                    } catch (Exception $exception) {
+                        $this->log(sprintf('action=removal step=failed node=%s message="Node data could not be loaded or faked"', $node['nodeIdentifier']), \LOG_CRIT);
+                        $this->_logger->logException($exception);
+                        continue;
+                    }
                 }
 
                 $context = $this->contextFactory->create([
@@ -127,16 +75,6 @@ class RemovalJob implements JobInterface
         });
 
         return true;
-    }
-
-    /**
-     * Get an optional identifier for the job
-     *
-     * @return string A job identifier
-     */
-    public function getIdentifier()
-    {
-        return $this->identifier;
     }
 
     /**
