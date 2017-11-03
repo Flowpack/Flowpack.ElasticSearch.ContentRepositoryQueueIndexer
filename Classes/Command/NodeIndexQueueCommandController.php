@@ -7,17 +7,18 @@ use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeD
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\LoggerTrait;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\UpdateAliasJob;
+use Flowpack\ElasticSearch\Domain\Model\Mapping;
+use Flowpack\JobQueue\Common\Exception;
 use Flowpack\JobQueue\Common\Job\JobManager;
 use Flowpack\JobQueue\Common\Queue\QueueManager;
+use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Cli\CommandController;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
-use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
 use Neos\Utility\Files;
 
 /**
  * Provides CLI features for index handling
- *
  * @Flow\Scope("singleton")
  */
 class NodeIndexQueueCommandController extends CommandController
@@ -73,13 +74,14 @@ class NodeIndexQueueCommandController extends CommandController
      * Index all nodes by creating a new index and when everything was completed, switch the index alias.
      *
      * @param string $workspace
+     * @throws \Flowpack\JobQueue\Common\Exception
+     * @throws \Neos\Flow\Mvc\Exception\StopActionException
      */
     public function buildCommand($workspace = null)
     {
         $indexPostfix = time();
         $indexName = $this->createNextIndex($indexPostfix);
         $this->updateMapping();
-
 
         $this->outputLine();
         $this->outputLine('<b>Indexing on %s ...</b>', [$indexName]);
@@ -114,6 +116,7 @@ class NodeIndexQueueCommandController extends CommandController
      * @param int $limit If set, only the given amount of jobs are processed (successful or not) before the script exits
      * @param bool $verbose Output debugging information
      * @return void
+     * @throws \Neos\Flow\Mvc\Exception\StopActionException
      */
     public function workCommand($queue = 'batch', $exitAfter = null, $limit = null, $verbose = false)
     {
@@ -145,8 +148,8 @@ class NodeIndexQueueCommandController extends CommandController
             }
             try {
                 $message = $this->jobManager->waitAndExecute($queueName, $timeout);
-            } catch (JobQueueException $exception) {
-                $numberOfJobExecutions ++;
+            } catch (Exception $exception) {
+                $numberOfJobExecutions++;
                 $this->outputLine('<error>%s</error>', [$exception->getMessage()]);
                 if ($verbose && $exception->getPrevious() instanceof \Exception) {
                     $this->outputLine('  Reason: %s', [$exception->getPrevious()->getMessage()]);
@@ -156,7 +159,7 @@ class NodeIndexQueueCommandController extends CommandController
                 $this->quit(1);
             }
             if ($message !== null) {
-                $numberOfJobExecutions ++;
+                $numberOfJobExecutions++;
                 if ($verbose) {
                     $messagePayload = strlen($message->getPayload()) <= 50 ? $message->getPayload() : substr($message->getPayload(), 0, 50) . '...';
                     $this->outputLine('<success>Successfully executed job "%s" (%s)</success>', [$message->getIdentifier(), $messagePayload]);
@@ -174,7 +177,6 @@ class NodeIndexQueueCommandController extends CommandController
                 }
                 $this->quit();
             }
-
         } while (true);
     }
 
@@ -183,8 +185,12 @@ class NodeIndexQueueCommandController extends CommandController
      */
     public function flushCommand()
     {
-        $this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->flush();
-        $this->outputSystemReport();
+        try {
+            $this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->flush();
+            $this->outputSystemReport();
+        } catch (Exception $exception) {
+            $this->outputLine('An error occurred: %s', [$exception->getMessage()]);
+        }
         $this->outputLine();
     }
 
@@ -198,7 +204,11 @@ class NodeIndexQueueCommandController extends CommandController
         $time = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
         $this->outputLine('Execution time : %s seconds', [$time]);
         $this->outputLine('Indexing Queue : %s', [self::BATCH_QUEUE_NAME]);
-        $this->outputLine('Pending Jobs   : %s', [$this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->count()]);
+        try {
+            $this->outputLine('Pending Jobs   : %s', [$this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->count()]);
+        } catch (Exception $exception) {
+            $this->outputLine('Pending Jobs   : Error, queue not found, %s', [$exception->getMessage()]);
+        }
     }
 
     /**
@@ -251,6 +261,7 @@ class NodeIndexQueueCommandController extends CommandController
         $this->nodeIndexer->setIndexNamePostfix($indexPostfix);
         $this->nodeIndexer->getIndex()->create();
         $this->log(sprintf('action=indexing step=index-created index=%s', $this->nodeIndexer->getIndexName()), LOG_INFO);
+
         return $this->nodeIndexer->getIndexName();
     }
 

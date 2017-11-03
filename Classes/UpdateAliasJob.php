@@ -47,6 +47,9 @@ class UpdateAliasJob implements JobInterface
      * @param QueueInterface $queue
      * @param Message $message The original message
      * @return boolean TRUE if the job was executed successfully and the message should be finished
+     * @throws \Exception
+     * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
+     * @throws \Flowpack\ElasticSearch\Transfer\Exception\ApiException
      */
     public function execute(QueueInterface $queue, Message $message)
     {

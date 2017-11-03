@@ -2,18 +2,10 @@
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
 
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception;
-use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
-use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
-use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Service\FakeNodeDataFactory;
-use Flowpack\JobQueue\Common\Job\JobInterface;
 use Flowpack\JobQueue\Common\Queue\Message;
 use Flowpack\JobQueue\Common\Queue\QueueInterface;
 use Neos\ContentRepository\Domain\Model\NodeData;
-use Neos\Flow\Annotations as Flow;
-use Neos\Flow\Utility\Algorithms;
-use Neos\ContentRepository\Domain\Factory\NodeFactory;
 use Neos\ContentRepository\Domain\Model\NodeInterface;
-use Neos\ContentRepository\Domain\Service\ContextFactoryInterface;
 
 /**
  * Elasticsearch Node Removal Job
@@ -26,6 +18,7 @@ class RemovalJob extends AbstractIndexingJob
      * @param QueueInterface $queue
      * @param Message $message The original message
      * @return boolean TRUE if the job was executed successfully and the message should be finished
+     * @throws \Exception
      */
     public function execute(QueueInterface $queue, Message $message)
     {

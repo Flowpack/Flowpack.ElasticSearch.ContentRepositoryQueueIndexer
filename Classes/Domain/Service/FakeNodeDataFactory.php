@@ -5,6 +5,7 @@ use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception;
 use Neos\ContentRepository\Domain\Model\NodeData;
 use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
 use Neos\ContentRepository\Domain\Service\NodeTypeManager;
+use Neos\ContentRepository\Exception\NodeTypeNotFoundException;
 use Neos\Flow\Annotations as Flow;
 
 /**
@@ -24,28 +25,39 @@ class FakeNodeDataFactory
      */
     protected $nodeTypeManager;
 
-    public function createFromPayload(array $data)
+    /**
+     * Thie creates a NodeData instance from the given payload
+     *
+     * @param array $payload
+     * @return NodeData
+     * @throws Exception
+     */
+    public function createFromPayload(array $payload)
     {
-        if (!isset($data['workspace']) || empty($data['workspace'])) {
+        if (!isset($payload['workspace']) || empty($payload['workspace'])) {
             throw new Exception('Unable to create fake node data, missing workspace value', 1508448007);
         }
-        if (!isset($data['path']) || empty($data['path'])) {
+        if (!isset($payload['path']) || empty($payload['path'])) {
             throw new Exception('Unable to create fake node data, missing path value', 1508448008);
         }
-        if (!isset($data['nodeIdentifier']) || empty($data['nodeIdentifier'])) {
+        if (!isset($payload['nodeIdentifier']) || empty($payload['nodeIdentifier'])) {
             throw new Exception('Unable to create fake node data, missing identifier value', 1508448009);
         }
-        if (!isset($data['nodeType']) || empty($data['nodeType'])) {
+        if (!isset($payload['nodeType']) || empty($payload['nodeType'])) {
             throw new Exception('Unable to create fake node data, missing nodeType value', 1508448011);
         }
 
-        $workspace = $this->workspaceRepository->findOneByName($data['workspace']);
+        $workspace = $this->workspaceRepository->findOneByName($payload['workspace']);
         if ($workspace === null) {
             throw new Exception('Unable to create fake node data, workspace not found', 1508448028);
         }
 
-        $nodeData = new NodeData($data['path'], $workspace, $data['nodeIdentifier'], isset($data['dimensions']) ? $data['dimensions'] : null);
-        $nodeData->setNodeType($this->nodeTypeManager->getNodeType($data['nodeType']));
+        $nodeData = new NodeData($payload['path'], $workspace, $payload['nodeIdentifier'], isset($payload['dimensions']) ? $payload['dimensions'] : null);
+        try {
+            $nodeData->setNodeType($this->nodeTypeManager->getNodeType($payload['nodeType']));
+        } catch (NodeTypeNotFoundException $e) {
+            throw new Exception('Unable to create fake node data, node type not found', 1509362172);
+        }
 
         $nodeData->setProperty('title', 'Fake node');
         $nodeData->setProperty('uriPathSegment', 'fake-node');

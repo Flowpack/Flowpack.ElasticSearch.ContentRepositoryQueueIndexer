@@ -6,9 +6,9 @@ use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Command\NodeIndexQueueC
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\RemovalJob;
 use Flowpack\JobQueue\Common\Job\JobManager;
+use Neos\ContentRepository\Domain\Model\NodeInterface;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
-use Neos\ContentRepository\Domain\Model\NodeInterface;
 
 /**
  * ElasticSearch Indexing Job Interface
@@ -36,11 +36,13 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
     /**
      * @param NodeInterface $node
      * @param string|null $targetWorkspaceName In case indexing is triggered during publishing, a target workspace name will be passed in
+     * @throws \Neos\ContentRepository\Search\Exception\IndexingException
      */
     public function indexNode(NodeInterface $node, $targetWorkspaceName = null)
     {
         if ($this->enableLiveAsyncIndexing !== true) {
             parent::indexNode($node, $targetWorkspaceName);
+
             return;
         }
         $indexingJob = new IndexingJob($this->indexNamePostfix, $targetWorkspaceName, [
@@ -63,6 +65,7 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
     {
         if ($this->enableLiveAsyncIndexing !== true) {
             parent::removeNode($node, $targetWorkspaceName);
+
             return;
         }
         $removalJob = new RemovalJob($this->indexNamePostfix, $targetWorkspaceName, [
