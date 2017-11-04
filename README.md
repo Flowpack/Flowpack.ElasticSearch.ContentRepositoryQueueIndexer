@@ -37,6 +37,22 @@ Check the ```Settings.yaml``` to adapt based on the Queue package, you need to a
             'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live':
               className: 'Flowpack\JobQueue\Beanstalkd\Queue\BeanstalkdQueue'
 
+If you use the [doctrine](https://packagist.org/packages/flownative/jobqueue-doctrine) package you have to set the ```tableName``` manually:
+
+    Flowpack:
+      JobQueue:
+        Common:
+          queues:
+            'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
+              className: 'Flowpack\JobQueue\Doctrine\Queue\DoctrineQueue'
+              options:
+                tableName: 'flowpack_jobqueue_QueueIndexer'
+
+            'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live':
+              className: 'Flowpack\JobQueue\Doctrine\Queue\DoctrineQueue'
+              options:
+                tableName: 'flowpack_jobqueue_QueueIndexerLive'
+
 # Batch Indexing
 
 ## How to build indexing job
