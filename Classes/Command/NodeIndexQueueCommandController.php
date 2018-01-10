@@ -220,7 +220,7 @@ class NodeIndexQueueCommandController extends CommandController
         $this->outputLine('<info>++</info> Indexing %s workspace', [$workspaceName]);
         $nodeCounter = 0;
         $offset = 0;
-        $batchSize = 500;
+        $batchSize = 100;
         while (true) {
             $iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $batchSize);
 
