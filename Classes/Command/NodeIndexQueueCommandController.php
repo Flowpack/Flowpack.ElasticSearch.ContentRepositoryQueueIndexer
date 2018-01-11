@@ -83,6 +83,7 @@ class NodeIndexQueueCommandController extends CommandController
      * @param string $workspace
      * @throws \Flowpack\JobQueue\Common\Exception
      * @throws \Neos\Flow\Mvc\Exception\StopActionException
+     * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      */
     public function buildCommand($workspace = null)
     {
@@ -261,6 +262,7 @@ class NodeIndexQueueCommandController extends CommandController
     /**
      * @param string $indexPostfix
      * @return string
+     * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      */
     protected function createNextIndex($indexPostfix)
     {
@@ -273,6 +275,9 @@ class NodeIndexQueueCommandController extends CommandController
 
     /**
      * Update Index Mapping
+     *
+     * @return void
+     * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      */
     protected function updateMapping()
     {
