@@ -19,6 +19,7 @@ use Neos\Utility\Files;
 
 /**
  * Provides CLI features for index handling
+ *
  * @Flow\Scope("singleton")
  */
 class NodeIndexQueueCommandController extends CommandController
@@ -27,6 +28,7 @@ class NodeIndexQueueCommandController extends CommandController
 
     const BATCH_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
     const LIVE_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live';
+    const DEFAULT_BATCH_SIZE = 500;
 
     /**
      * @var JobManager
@@ -69,6 +71,12 @@ class NodeIndexQueueCommandController extends CommandController
      * @Flow\Inject
      */
     protected $nodeIndexer;
+
+    /**
+     * @Flow\InjectConfiguration(package="Flowpack.ElasticSearch.ContentRepositoryQueueIndexer")
+     * @var array
+     */
+    protected $settings;
 
     /**
      * Index all nodes by creating a new index and when everything was completed, switch the index alias.
@@ -220,7 +228,7 @@ class NodeIndexQueueCommandController extends CommandController
         $this->outputLine('<info>++</info> Indexing %s workspace', [$workspaceName]);
         $nodeCounter = 0;
         $offset = 0;
-        $batchSize = 100;
+        $batchSize = $this->settings['batchSize'] ?? static::DEFAULT_BATCH_SIZE;
         while (true) {
             $iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $batchSize);
 
