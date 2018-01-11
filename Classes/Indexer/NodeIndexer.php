@@ -45,15 +45,8 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
 
             return;
         }
-        $indexingJob = new IndexingJob($this->indexNamePostfix, $targetWorkspaceName, [
-            [
-                'nodeIdentifier' => $this->persistenceManager->getIdentifierByObject($node->getNodeData()),
-                'dimensions' => $node->getDimensions(),
-                'workspace' => $node->getWorkspace()->getName(),
-                'nodeType' => $node->getNodeType()->getName(),
-                'path' => $node->getPath(),
-            ]
-        ]);
+
+        $indexingJob = new IndexingJob($this->indexNamePostfix, $targetWorkspaceName, $this->nodeAsArray($node));
         $this->jobManager->queue(NodeIndexQueueCommandController::LIVE_QUEUE_NAME, $indexingJob);
     }
 
@@ -68,15 +61,28 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
 
             return;
         }
-        $removalJob = new RemovalJob($this->indexNamePostfix, $targetWorkspaceName, [
+
+        $removalJob = new RemovalJob($this->indexNamePostfix, $targetWorkspaceName, $this->nodeAsArray($node));
+        $this->jobManager->queue(NodeIndexQueueCommandController::LIVE_QUEUE_NAME, $removalJob);
+    }
+
+    /**
+     * Returns an array of data from the node for use as job payload.
+     *
+     * @param NodeInterface $node
+     * @return array
+     */
+    protected function nodeAsArray(NodeInterface $node)
+    {
+        return [
             [
-                'nodeIdentifier' => $this->persistenceManager->getIdentifierByObject($node->getNodeData()),
+                'persistenceObjectIdentifier' => $this->persistenceManager->getIdentifierByObject($node->getNodeData()),
+                'identifier' => $node->getIdentifier(),
                 'dimensions' => $node->getDimensions(),
                 'workspace' => $node->getWorkspace()->getName(),
                 'nodeType' => $node->getNodeType()->getName(),
-                'path' => $node->getPath(),
+                'path' => $node->getPath()
             ]
-        ]);
-        $this->jobManager->queue(NodeIndexQueueCommandController::LIVE_QUEUE_NAME, $removalJob);
+        ];
     }
 }

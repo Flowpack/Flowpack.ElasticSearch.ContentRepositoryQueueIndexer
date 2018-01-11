@@ -27,14 +27,14 @@ class RemovalJob extends AbstractIndexingJob
             $startTime = microtime(true);
             foreach ($this->nodes as $node) {
                 /** @var NodeData $nodeData */
-                $nodeData = $this->nodeDataRepository->findByIdentifier($node['nodeIdentifier']);
+                $nodeData = $this->nodeDataRepository->findByIdentifier($node['persistenceObjectIdentifier']);
 
                 // Skip this iteration if the nodedata can not be fetched (deleted node)
                 if (!$nodeData instanceof NodeData) {
                     try {
                         $nodeData = $this->fakeNodeDataFactory->createFromPayload($node);
                     } catch (Exception $exception) {
-                        $this->log(sprintf('action=removal step=failed node=%s message="Node data could not be loaded or faked"', $node['nodeIdentifier']), \LOG_CRIT);
+                        $this->log(sprintf('action=removal step=failed node=%s message="Node data could not be loaded or faked"', $node['identifier']), \LOG_CRIT);
                         $this->_logger->logException($exception);
                         continue;
                     }
@@ -51,7 +51,7 @@ class RemovalJob extends AbstractIndexingJob
 
                 // Skip this iteration if the node can not be fetched from the current context
                 if (!$currentNode instanceof NodeInterface) {
-                    $this->log(sprintf('action=removal step=failed node=%s message="Node could not be processed"', $node['nodeIdentifier']));
+                    $this->log(sprintf('action=removal step=failed node=%s message="Node could not be processed"', $node['identifier']));
                     continue;
                 }
 

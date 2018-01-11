@@ -26,7 +26,7 @@ class FakeNodeDataFactory
     protected $nodeTypeManager;
 
     /**
-     * Thie creates a NodeData instance from the given payload
+     * This creates a "fake" removed NodeData instance from the given payload
      *
      * @param array $payload
      * @return NodeData
@@ -40,7 +40,7 @@ class FakeNodeDataFactory
         if (!isset($payload['path']) || empty($payload['path'])) {
             throw new Exception('Unable to create fake node data, missing path value', 1508448008);
         }
-        if (!isset($payload['nodeIdentifier']) || empty($payload['nodeIdentifier'])) {
+        if (!isset($payload['identifier']) || empty($payload['identifier'])) {
             throw new Exception('Unable to create fake node data, missing identifier value', 1508448009);
         }
         if (!isset($payload['nodeType']) || empty($payload['nodeType'])) {
@@ -52,7 +52,7 @@ class FakeNodeDataFactory
             throw new Exception('Unable to create fake node data, workspace not found', 1508448028);
         }
 
-        $nodeData = new NodeData($payload['path'], $workspace, $payload['nodeIdentifier'], isset($payload['dimensions']) ? $payload['dimensions'] : null);
+        $nodeData = new NodeData($payload['path'], $workspace, $payload['identifier'], isset($payload['dimensions']) ? $payload['dimensions'] : null);
         try {
             $nodeData->setNodeType($this->nodeTypeManager->getNodeType($payload['nodeType']));
         } catch (NodeTypeNotFoundException $e) {

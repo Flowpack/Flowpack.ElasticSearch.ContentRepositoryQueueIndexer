@@ -26,11 +26,11 @@ class IndexingJob extends AbstractIndexingJob
             $startTime = microtime(true);
             foreach ($this->nodes as $node) {
                 /** @var NodeData $nodeData */
-                $nodeData = $this->nodeDataRepository->findByIdentifier($node['nodeIdentifier']);
+                $nodeData = $this->nodeDataRepository->findByIdentifier($node['persistenceObjectIdentifier']);
 
                 // Skip this iteration if the nodedata can not be fetched (deleted node)
                 if (!$nodeData instanceof NodeData) {
-                    $this->log(sprintf('action=indexing step=failed node=%s message="Node data could not be loaded"', $node['nodeIdentifier']), \LOG_ERR);
+                    $this->log(sprintf('action=indexing step=failed node=%s message="Node data could not be loaded"', $node['identifier']), \LOG_ERR);
                     continue;
                 }
 
@@ -44,7 +44,7 @@ class IndexingJob extends AbstractIndexingJob
 
                 // Skip this iteration if the node can not be fetched from the current context
                 if (!$currentNode instanceof NodeInterface) {
-                    $this->log(sprintf('action=indexing step=failed node=%s message="Node could not be processed"', $node['nodeIdentifier']));
+                    $this->log(sprintf('action=indexing step=failed node=%s message="Node could not be processed"', $node['identifier']));
                     continue;
                 }
 
