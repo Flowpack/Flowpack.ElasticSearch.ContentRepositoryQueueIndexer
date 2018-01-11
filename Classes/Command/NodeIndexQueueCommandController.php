@@ -28,7 +28,6 @@ class NodeIndexQueueCommandController extends CommandController
 
     const BATCH_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
     const LIVE_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live';
-    const DEFAULT_BATCH_SIZE = 500;
 
     /**
      * @var JobManager
@@ -73,10 +72,10 @@ class NodeIndexQueueCommandController extends CommandController
     protected $nodeIndexer;
 
     /**
-     * @Flow\InjectConfiguration(package="Flowpack.ElasticSearch.ContentRepositoryQueueIndexer")
-     * @var array
+     * @Flow\InjectConfiguration(path="batchSize")
+     * @var int
      */
-    protected $settings;
+    protected $batchSize;
 
     /**
      * Index all nodes by creating a new index and when everything was completed, switch the index alias.
@@ -228,9 +227,8 @@ class NodeIndexQueueCommandController extends CommandController
         $this->outputLine('<info>++</info> Indexing %s workspace', [$workspaceName]);
         $nodeCounter = 0;
         $offset = 0;
-        $batchSize = $this->settings['batchSize'] ?? static::DEFAULT_BATCH_SIZE;
         while (true) {
-            $iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $batchSize);
+            $iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $this->batchSize);
 
             $jobData = [];
 
@@ -252,7 +250,7 @@ class NodeIndexQueueCommandController extends CommandController
             $indexingJob = new IndexingJob($indexPostfix, $workspaceName, $jobData);
             $this->jobManager->queue(self::BATCH_QUEUE_NAME, $indexingJob);
             $this->output('.');
-            $offset += $batchSize;
+            $offset += $this->batchSize;
             $this->persistenceManager->clearState();
         }
         $this->outputLine();
