@@ -58,7 +58,7 @@ class RemovalJob extends AbstractIndexingJob
                 $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
                 $this->log(sprintf('action=removal step=started node=%s', $currentNode->getIdentifier()));
 
-                $this->nodeIndexer->removeNode($currentNode);
+                $this->nodeIndexer->removeNode($currentNode, $this->targetWorkspaceName);
             }
 
             $this->nodeIndexer->flush();

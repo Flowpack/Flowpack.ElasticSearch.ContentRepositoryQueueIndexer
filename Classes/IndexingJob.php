@@ -51,7 +51,7 @@ class IndexingJob extends AbstractIndexingJob
                 $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
                 $this->log(sprintf('action=indexing step=started node=%s', $currentNode->getIdentifier()));
 
-                $this->nodeIndexer->indexNode($currentNode);
+                $this->nodeIndexer->indexNode($currentNode, $this->targetWorkspaceName);
             }
 
             $this->nodeIndexer->flush();
