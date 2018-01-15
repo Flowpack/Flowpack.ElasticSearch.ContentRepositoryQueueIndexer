@@ -32,7 +32,7 @@ class NodeDataRepository extends Repository
         /** @var QueryBuilder $queryBuilder */
         $queryBuilder = $this->entityManager->createQueryBuilder();
 
-        $queryBuilder->select('n.Persistence_Object_Identifier nodeIdentifier, n.dimensionValues dimensions, n.nodeType nodeType, n.path path')
+        $queryBuilder->select('n.Persistence_Object_Identifier persistenceObjectIdentifier, n.identifier identifier, n.dimensionValues dimensions, n.nodeType nodeType, n.path path')
             ->from(NodeData::class, 'n')
             ->where("n.workspace = :workspace AND n.removed = :removed AND n.movedTo IS NULL")
             ->setFirstResult((integer)$firstResult)
