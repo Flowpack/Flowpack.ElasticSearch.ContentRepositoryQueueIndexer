@@ -1,15 +1,15 @@
 {
   "name": "flowpack/elasticsearch-contentrepositoryqueueindexer",
-  "type": "typo3-flow-package",
-  "description": "Neos CMS ElasticSearch indexer based on beanstalkd (job queue)",
+  "type": "neos-package",
+  "description": "Neos CMS Elasticsearch indexer based on a job queue",
   "license": "MIT",
   "require": {
     "flowpack/jobqueue-common": "^2.0.0",
     "flowpack/elasticsearch-contentrepositoryadaptor": "^4.0.0"
   },
   "autoload": {
-    "psr-0": {
-      "Flowpack\\ElasticSearch\\ContentRepositoryQueueIndexer": "Classes"
+    "psr-4": {
+      "Flowpack\\ElasticSearch\\ContentRepositoryQueueIndexer\\": "Classes"
     }
   },
   "extra": {

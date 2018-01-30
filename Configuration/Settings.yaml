@@ -2,7 +2,8 @@ Flowpack:
   ElasticSearch:
     ContentRepositoryQueueIndexer:
       enableLiveAsyncIndexing: true
-
+      # Change size of single batch jobs via this setting (fallback default is 500)
+      # batchSize: 50
   JobQueue:
     Common:
       presets:
@@ -10,8 +11,9 @@ Flowpack:
           className: 'Flowpack\JobQueue\Beanstalkd\Queue\BeanstalkdQueue'
           executeIsolated: true
           options:
-            host: '127.0.0.1'
-            port: 11300
+            client:
+              host: '127.0.0.1'
+              port: 11300
 
       queues:
         'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':

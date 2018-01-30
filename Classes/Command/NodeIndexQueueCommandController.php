@@ -9,6 +9,8 @@ use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\LoggerTrait;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\UpdateAliasJob;
 use Flowpack\JobQueue\Common\Job\JobManager;
 use Flowpack\JobQueue\Common\Queue\QueueManager;
+use Flowpack\ElasticSearch\Domain\Model\Mapping;
+use Flowpack\JobQueue\Common\Exception as JobQueueException;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Cli\CommandController;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
@@ -26,6 +28,7 @@ class NodeIndexQueueCommandController extends CommandController
 
     const BATCH_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
     const LIVE_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live';
+    const DEFAULT_BATCH_SIZE = 500;
 
     /**
      * @var JobManager
@@ -68,6 +71,12 @@ class NodeIndexQueueCommandController extends CommandController
      * @Flow\Inject
      */
     protected $nodeIndexer;
+
+    /**
+     * @Flow\InjectConfiguration(package="Flowpack.ElasticSearch.ContentRepositoryQueueIndexer")
+     * @var array
+     */
+    protected $settings;
 
     /**
      * Index all nodes by creating a new index and when everything was completed, switch the index alias.
@@ -210,7 +219,7 @@ class NodeIndexQueueCommandController extends CommandController
         $this->outputLine('<info>++</info> Indexing %s workspace', [$workspaceName]);
         $nodeCounter = 0;
         $offset = 0;
-        $batchSize = 500;
+        $batchSize = $this->settings['batchSize'] ?? static::DEFAULT_BATCH_SIZE;
         while (true) {
             $iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $batchSize);
 
