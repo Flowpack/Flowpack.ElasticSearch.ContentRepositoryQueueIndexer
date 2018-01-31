@@ -7,14 +7,16 @@ use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeD
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\LoggerTrait;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\UpdateAliasJob;
+use Flowpack\ElasticSearch\Domain\Model\Mapping;
+use Flowpack\JobQueue\Common\Exception;
 use Flowpack\JobQueue\Common\Job\JobManager;
 use Flowpack\JobQueue\Common\Queue\QueueManager;
 use Flowpack\ElasticSearch\Domain\Model\Mapping;
 use Flowpack\JobQueue\Common\Exception as JobQueueException;
+use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Cli\CommandController;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
-use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
 use Neos\Utility\Files;
 
 /**
@@ -28,7 +30,6 @@ class NodeIndexQueueCommandController extends CommandController
 
     const BATCH_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
     const LIVE_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live';
-    const DEFAULT_BATCH_SIZE = 500;
 
     /**
      * @var JobManager
@@ -73,22 +74,24 @@ class NodeIndexQueueCommandController extends CommandController
     protected $nodeIndexer;
 
     /**
-     * @Flow\InjectConfiguration(package="Flowpack.ElasticSearch.ContentRepositoryQueueIndexer")
-     * @var array
+     * @Flow\InjectConfiguration(path="batchSize")
+     * @var int
      */
-    protected $settings;
+    protected $batchSize;
 
     /**
      * Index all nodes by creating a new index and when everything was completed, switch the index alias.
      *
      * @param string $workspace
+     * @throws \Flowpack\JobQueue\Common\Exception
+     * @throws \Neos\Flow\Mvc\Exception\StopActionException
+     * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      */
     public function buildCommand($workspace = null)
     {
         $indexPostfix = time();
         $indexName = $this->createNextIndex($indexPostfix);
         $this->updateMapping();
-
 
         $this->outputLine();
         $this->outputLine('<b>Indexing on %s ...</b>', [$indexName]);
@@ -123,6 +126,7 @@ class NodeIndexQueueCommandController extends CommandController
      * @param int $limit If set, only the given amount of jobs are processed (successful or not) before the script exits
      * @param bool $verbose Output debugging information
      * @return void
+     * @throws \Neos\Flow\Mvc\Exception\StopActionException
      */
     public function workCommand($queue = 'batch', $exitAfter = null, $limit = null, $verbose = false)
     {
@@ -154,8 +158,8 @@ class NodeIndexQueueCommandController extends CommandController
             }
             try {
                 $message = $this->jobManager->waitAndExecute($queueName, $timeout);
-            } catch (JobQueueException $exception) {
-                $numberOfJobExecutions ++;
+            } catch (Exception $exception) {
+                $numberOfJobExecutions++;
                 $this->outputLine('<error>%s</error>', [$exception->getMessage()]);
                 if ($verbose && $exception->getPrevious() instanceof \Exception) {
                     $this->outputLine('  Reason: %s', [$exception->getPrevious()->getMessage()]);
@@ -165,7 +169,7 @@ class NodeIndexQueueCommandController extends CommandController
                 $this->quit(1);
             }
             if ($message !== null) {
-                $numberOfJobExecutions ++;
+                $numberOfJobExecutions++;
                 if ($verbose) {
                     $messagePayload = strlen($message->getPayload()) <= 50 ? $message->getPayload() : substr($message->getPayload(), 0, 50) . '...';
                     $this->outputLine('<success>Successfully executed job "%s" (%s)</success>', [$message->getIdentifier(), $messagePayload]);
@@ -183,7 +187,6 @@ class NodeIndexQueueCommandController extends CommandController
                 }
                 $this->quit();
             }
-
         } while (true);
     }
 
@@ -192,8 +195,12 @@ class NodeIndexQueueCommandController extends CommandController
      */
     public function flushCommand()
     {
-        $this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->flush();
-        $this->outputSystemReport();
+        try {
+            $this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->flush();
+            $this->outputSystemReport();
+        } catch (Exception $exception) {
+            $this->outputLine('An error occurred: %s', [$exception->getMessage()]);
+        }
         $this->outputLine();
     }
 
@@ -207,7 +214,11 @@ class NodeIndexQueueCommandController extends CommandController
         $time = microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"];
         $this->outputLine('Execution time : %s seconds', [$time]);
         $this->outputLine('Indexing Queue : %s', [self::BATCH_QUEUE_NAME]);
-        $this->outputLine('Pending Jobs   : %s', [$this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->count()]);
+        try {
+            $this->outputLine('Pending Jobs   : %s', [$this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->count()]);
+        } catch (Exception $exception) {
+            $this->outputLine('Pending Jobs   : Error, queue not found, %s', [$exception->getMessage()]);
+        }
     }
 
     /**
@@ -219,16 +230,19 @@ class NodeIndexQueueCommandController extends CommandController
         $this->outputLine('<info>++</info> Indexing %s workspace', [$workspaceName]);
         $nodeCounter = 0;
         $offset = 0;
-        $batchSize = $this->settings['batchSize'] ?? static::DEFAULT_BATCH_SIZE;
         while (true) {
-            $iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $batchSize);
+            $iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $this->batchSize);
 
             $jobData = [];
 
             foreach ($this->nodeDataRepository->iterate($iterator) as $data) {
                 $jobData[] = [
-                    'nodeIdentifier' => $data['nodeIdentifier'],
-                    'dimensions' => $data['dimensions']
+                    'persistenceObjectIdentifier' => $data['persistenceObjectIdentifier'],
+                    'identifier' => $data['identifier'],
+                    'dimensions' => $data['dimensions'],
+                    'workspace' => $workspaceName,
+                    'nodeType' => $data['nodeType'],
+                    'path' => $data['path'],
                 ];
                 $nodeCounter++;
             }
@@ -240,7 +254,7 @@ class NodeIndexQueueCommandController extends CommandController
             $indexingJob = new IndexingJob($indexPostfix, $workspaceName, $jobData);
             $this->jobManager->queue(self::BATCH_QUEUE_NAME, $indexingJob);
             $this->output('.');
-            $offset += $batchSize;
+            $offset += $this->batchSize;
             $this->persistenceManager->clearState();
         }
         $this->outputLine();
@@ -251,17 +265,22 @@ class NodeIndexQueueCommandController extends CommandController
     /**
      * @param string $indexPostfix
      * @return string
+     * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      */
     protected function createNextIndex($indexPostfix)
     {
         $this->nodeIndexer->setIndexNamePostfix($indexPostfix);
         $this->nodeIndexer->getIndex()->create();
         $this->log(sprintf('action=indexing step=index-created index=%s', $this->nodeIndexer->getIndexName()), LOG_INFO);
+
         return $this->nodeIndexer->getIndexName();
     }
 
     /**
      * Update Index Mapping
+     *
+     * @return void
+     * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      */
     protected function updateMapping()
     {
