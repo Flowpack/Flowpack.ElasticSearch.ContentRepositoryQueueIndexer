@@ -6,7 +6,7 @@ Flowpack:
       # batchSize: 50
   JobQueue:
     Common:
-      queues:
+      presets:
         'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
           className: 'Flowpack\JobQueue\Beanstalkd\Queue\BeanstalkdQueue'
           executeIsolated: true
@@ -15,10 +15,9 @@ Flowpack:
               host: '127.0.0.1'
               port: 11300
 
+      queues:
+        'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
+          preset: 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer'
+
         'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live':
-          className: 'Flowpack\JobQueue\Beanstalkd\Queue\BeanstalkdQueue'
-          executeIsolated: true
-          options:
-            client:
-              host: '127.0.0.1'
-              port: 11300
+          preset: 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer'
