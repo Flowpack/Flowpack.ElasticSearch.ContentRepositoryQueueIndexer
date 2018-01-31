@@ -4,6 +4,7 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Internal\Hydration\IterableResult;
 use Doctrine\ORM\QueryBuilder;
+use Neos\ContentRepository\Domain\Model\NodeData;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\Repository;
 
@@ -12,7 +13,7 @@ use Neos\Flow\Persistence\Repository;
  */
 class NodeDataRepository extends Repository
 {
-    const ENTITY_CLASSNAME = 'Neos\ContentRepository\Domain\Model\NodeData';
+    const ENTITY_CLASSNAME = NodeData::class;
 
     /**
      * @Flow\Inject
@@ -28,12 +29,11 @@ class NodeDataRepository extends Repository
      */
     public function findAllBySiteAndWorkspace($workspaceName, $firstResult = 0, $maxResults = 1000)
     {
-
         /** @var QueryBuilder $queryBuilder */
         $queryBuilder = $this->entityManager->createQueryBuilder();
 
-        $queryBuilder->select('n.Persistence_Object_Identifier nodeIdentifier, n.dimensionValues dimensions')
-            ->from('Neos\ContentRepository\Domain\Model\NodeData', 'n')
+        $queryBuilder->select('n.Persistence_Object_Identifier persistenceObjectIdentifier, n.identifier identifier, n.dimensionValues dimensions, n.nodeType nodeType, n.path path')
+            ->from(NodeData::class, 'n')
             ->where("n.workspace = :workspace AND n.removed = :removed AND n.movedTo IS NULL")
             ->setFirstResult((integer)$firstResult)
             ->setMaxResults((integer)$maxResults)
@@ -64,7 +64,7 @@ class NodeDataRepository extends Repository
             if ($callback !== null) {
                 call_user_func($callback, $iteration, $object);
             }
-            ++$iteration;
+            $iteration++;
         }
     }
 }
