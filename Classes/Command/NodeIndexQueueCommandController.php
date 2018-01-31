@@ -11,7 +11,6 @@ use Flowpack\ElasticSearch\Domain\Model\Mapping;
 use Flowpack\JobQueue\Common\Exception;
 use Flowpack\JobQueue\Common\Job\JobManager;
 use Flowpack\JobQueue\Common\Queue\QueueManager;
-use Flowpack\ElasticSearch\Domain\Model\Mapping;
 use Flowpack\JobQueue\Common\Exception as JobQueueException;
 use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
 use Neos\Flow\Annotations as Flow;
@@ -158,7 +157,7 @@ class NodeIndexQueueCommandController extends CommandController
             }
             try {
                 $message = $this->jobManager->waitAndExecute($queueName, $timeout);
-            } catch (Exception $exception) {
+            } catch (JobQueueException $exception) {
                 $numberOfJobExecutions++;
                 $this->outputLine('<error>%s</error>', [$exception->getMessage()]);
                 if ($verbose && $exception->getPrevious() instanceof \Exception) {
