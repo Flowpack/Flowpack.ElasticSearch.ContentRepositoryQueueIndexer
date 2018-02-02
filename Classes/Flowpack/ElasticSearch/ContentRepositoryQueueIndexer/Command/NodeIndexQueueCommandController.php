@@ -80,7 +80,7 @@ class NodeIndexQueueCommandController extends CommandController
     {
         $indexPostfix = time();
         $indexName = $this->createNextIndex($indexPostfix);
-        $this->updateMapping();
+        $this->updateMapping($indexPostfix);
 
         $this->outputLine();
         $this->outputLine('<b>Indexing on %s ...</b>', [$indexName]);
@@ -255,10 +255,11 @@ class NodeIndexQueueCommandController extends CommandController
     /**
      * Update Index Mapping
      */
-    protected function updateMapping()
+    protected function updateMapping($indexPostfix)
     {
         $nodeTypeMappingCollection = $this->nodeTypeMappingBuilder->buildMappingInformation($this->nodeIndexer->getIndex());
         foreach ($nodeTypeMappingCollection as $mapping) {
+            $this->nodeIndexer->setIndexNamePostfix($indexPostfix);
             /** @var Mapping $mapping */
             $mapping->apply();
         }
