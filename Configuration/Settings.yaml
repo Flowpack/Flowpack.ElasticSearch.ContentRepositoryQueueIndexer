@@ -3,7 +3,7 @@ Flowpack:
     ContentRepositoryQueueIndexer:
       enableLiveAsyncIndexing: true
       # Change size of single batch jobs via this setting
-      batchSize: 500
+      batchSize: 100
   JobQueue:
     Common:
       presets:
