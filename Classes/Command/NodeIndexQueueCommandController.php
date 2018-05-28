@@ -1,8 +1,8 @@
 <?php
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Command;
 
+use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Driver\NodeTypeMappingBuilderInterface;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
-use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Mapping\NodeTypeMappingBuilder;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\LoggerTrait;
@@ -48,7 +48,7 @@ class NodeIndexQueueCommandController extends CommandController
     protected $persistenceManager;
 
     /**
-     * @var NodeTypeMappingBuilder
+     * @var NodeTypeMappingBuilderInterface
      * @Flow\Inject
      */
     protected $nodeTypeMappingBuilder;
