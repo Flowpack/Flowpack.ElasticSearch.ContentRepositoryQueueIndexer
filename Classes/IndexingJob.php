@@ -30,7 +30,7 @@ class IndexingJob extends AbstractIndexingJob
 
                 // Skip this iteration if the nodedata can not be fetched (deleted node)
                 if (!$nodeData instanceof NodeData) {
-                    $this->log(sprintf('action=indexing step=failed node=%s message="Node data could not be loaded"', $node['identifier']), \LOG_ERR);
+                    $this->log(sprintf('action=indexing step=failed node=%s message="Node data could not be loaded"', $node['identifier']), \LOG_WARNING);
                     continue;
                 }
 
