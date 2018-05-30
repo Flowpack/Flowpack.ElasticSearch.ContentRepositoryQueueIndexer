@@ -39,6 +39,12 @@ class UpdateAliasJob implements JobInterface
     protected $indexPostfix;
 
     /**
+     * @Flow\InjectConfiguration(path="acceptedFailedJobs")
+     * @var int
+     */
+    protected $acceptedFailedJobs = -1;
+
+    /**
      * @param string $indexPostfix
      */
     public function __construct($indexPostfix)
@@ -48,9 +54,6 @@ class UpdateAliasJob implements JobInterface
     }
 
     /**
-     * Execute the job
-     * A job should finish itself after successful execution using the queue methods.
-     *
      * @param QueueInterface $queue
      * @param Message $message The original message
      * @return boolean TRUE if the job was executed successfully and the message should be finished
@@ -60,9 +63,13 @@ class UpdateAliasJob implements JobInterface
      */
     public function execute(QueueInterface $queue, Message $message): bool
     {
-        $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
-        $this->nodeIndexer->updateIndexAlias();
-        $this->log(sprintf('action=indexing step=index-switched alias=%s', $this->indexPostfix), LOG_NOTICE);
+        if ($this->shouldIndexBeSwitched($queue)) {
+            $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
+            $this->nodeIndexer->updateIndexAlias();
+            $this->log(sprintf('action=indexing step=index-switched alias=%s message="Index was switched successfully"', $this->indexPostfix), LOG_NOTICE);
+        } else {
+            $this->log(sprintf('action=indexing step=index-switched alias=%s message="Index was not switched due to %s failed batches in the current queue"', $this->indexPostfix, $queue->countFailed()), LOG_ERR);
+        }
 
         return true;
     }
@@ -85,5 +92,22 @@ class UpdateAliasJob implements JobInterface
     public function getLabel(): string
     {
         return sprintf('ElasticSearch Indexing Job (%s)', $this->getIdentifier());
+    }
+
+    /**
+     * @param QueueInterface $queue
+     * @return bool
+     */
+    protected function shouldIndexBeSwitched(QueueInterface $queue): bool
+    {
+        if ($this->acceptedFailedJobs === -1) {
+            return true;
+        }
+
+        if ($queue->countFailed() <= $this->acceptedFailedJobs) {
+            return true;
+        }
+
+        return false;
     }
 }
