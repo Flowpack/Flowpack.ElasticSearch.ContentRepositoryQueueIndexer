@@ -40,7 +40,7 @@ class IndexingJob extends AbstractIndexingJob
 
                 // Skip this iteration if the nodedata can not be fetched (deleted node)
                 if (!$nodeData instanceof NodeData) {
-                    $this->log(sprintf('action=indexing step=failed node=%s message="Node data could not be loaded"', $node['identifier']), \LOG_ERR);
+                    $this->log(sprintf('action=indexing step=skipped node=%s message="Node data could not be loaded"', $node['identifier']), \LOG_NOTICE);
                     continue;
                 }
 
@@ -54,20 +54,18 @@ class IndexingJob extends AbstractIndexingJob
 
                 // Skip this iteration if the node can not be fetched from the current context
                 if (!$currentNode instanceof NodeInterface) {
-                    $this->log(sprintf('action=indexing step=failed node=%s message="Node could not be processed"', $node['identifier']));
+                    $this->log(sprintf('action=indexing step=failed node=%s message="Node could not be processed"', $node['identifier']), \LOG_WARNING);
                     continue;
                 }
 
                 $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
-                $this->log(sprintf('action=indexing step=started node=%s', $currentNode->getIdentifier()));
-
                 $this->nodeIndexer->indexNode($currentNode, $this->targetWorkspaceName);
             }
 
             $this->nodeIndexer->flush();
             $duration = microtime(true) - $startTime;
             $rate = $numberOfNodes / $duration;
-            $this->log(sprintf('action=indexing step=finished number_of_nodes=%d duration=%f nodes_per_second=%f', $numberOfNodes, $duration, $rate));
+            $this->log(sprintf('action=indexing step=finished number_of_nodes=%d duration=%f nodes_per_second=%f', $numberOfNodes, $duration, $rate), \LOG_INFO);
         });
 
         return true;
