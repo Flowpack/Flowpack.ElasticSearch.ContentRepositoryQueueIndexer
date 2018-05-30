@@ -1,6 +1,16 @@
 <?php
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Indexer;
 
+/*
+ * This file is part of the Flowpack.ElasticSearch.ContentRepositoryQueueIndexer package.
+ *
+ * (c) Contributors of the Neos Project - www.neos.io
+ *
+ * This package is Open Source Software. For the full copyright and license
+ * information, please view the LICENSE file which was distributed with this
+ * source code.
+ */
+
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Command\NodeIndexQueueCommandController;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
@@ -11,7 +21,7 @@ use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 
 /**
- * ElasticSearch Indexing Job Interface
+ * Nodeindexer for use in batch jobs
  */
 class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
 {
