@@ -104,7 +104,7 @@ class NodeIndexQueueCommandController extends CommandController
         $this->outputLine();
         $this->outputLine('<b>Indexing on %s ...</b>', [$indexName]);
 
-        $pendingJobs = $this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->count();
+        $pendingJobs = $this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->countReady();
         if ($pendingJobs !== 0) {
             $this->outputLine('<error>!! </error> The queue "%s" is not empty (%d pending jobs), please flush the queue.', [self::BATCH_QUEUE_NAME, $pendingJobs]);
             $this->quit(1);
@@ -223,9 +223,12 @@ class NodeIndexQueueCommandController extends CommandController
         $this->outputLine('Execution time : %s seconds', [$time]);
         $this->outputLine('Indexing Queue : %s', [self::BATCH_QUEUE_NAME]);
         try {
-            $this->outputLine('Pending Jobs   : %s', [$this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->count()]);
+            $queue = $this->queueManager->getQueue(self::BATCH_QUEUE_NAME);
+            $this->outputLine('Pending Jobs   : %s', [$queue->countReady()]);
+            $this->outputLine('Reserved Jobs  : %s', [$queue->countReserved()]);
+            $this->outputLine('Failed Jobs    : %s', [$queue->countFailed()]);
         } catch (Exception $exception) {
-            $this->outputLine('Pending Jobs   : Error, queue not found, %s', [$exception->getMessage()]);
+            $this->outputLine('Pending Jobs   : Error, queue %s not found, %s', [self::BATCH_QUEUE_NAME, $exception->getMessage()]);
         }
     }
 
