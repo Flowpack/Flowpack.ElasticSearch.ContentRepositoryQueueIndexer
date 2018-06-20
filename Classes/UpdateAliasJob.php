@@ -58,7 +58,7 @@ class UpdateAliasJob implements JobInterface
      * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      * @throws \Flowpack\ElasticSearch\Transfer\Exception\ApiException
      */
-    public function execute(QueueInterface $queue, Message $message)
+    public function execute(QueueInterface $queue, Message $message): bool
     {
         $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
         $this->nodeIndexer->updateIndexAlias();
@@ -82,7 +82,7 @@ class UpdateAliasJob implements JobInterface
      *
      * @return string A label for the job
      */
-    public function getLabel()
+    public function getLabel(): string
     {
         return sprintf('ElasticSearch Indexing Job (%s)', $this->getIdentifier());
     }
