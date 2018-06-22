@@ -4,6 +4,11 @@ Flowpack:
       enableLiveAsyncIndexing: true
       # Change size of single batch jobs via this setting
       batchSize: 500
+
+      # Number of failed jobs accepted to switch the alias to the new index
+      # -1 means, accept any number of failures
+      acceptedFailedJobs: 0
+
   JobQueue:
     Common:
       presets:

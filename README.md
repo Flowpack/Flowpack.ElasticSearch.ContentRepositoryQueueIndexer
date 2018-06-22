@@ -80,8 +80,7 @@ You can use this CLI command to process indexing job:
 
 # Supervisord configuration
 
-You can use tools like ```supervisord``` to manage long runing process. Bellow you can
-found a basic configuration:
+You can use tools like ```supervisord``` to manage long running processes. Bellow you can find a basic configuration:
 
     [supervisord]
 
