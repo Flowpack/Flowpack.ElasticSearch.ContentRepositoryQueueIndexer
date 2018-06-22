@@ -7,7 +7,7 @@ Flowpack:
 
       # Number of failed jobs accepted to switch the alias to the new index
       # -1 means, accept any number of failures
-      acceptedFailedJobs: -1
+      acceptedFailedJobs: 0
 
   JobQueue:
     Common:
