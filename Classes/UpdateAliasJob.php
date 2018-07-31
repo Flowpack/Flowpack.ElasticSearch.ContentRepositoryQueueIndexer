@@ -12,6 +12,7 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
  */
 
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
+use Flowpack\ElasticSearch\Transfer\Exception\ApiException;
 use Flowpack\JobQueue\Common\Job\JobInterface;
 use Flowpack\JobQueue\Common\Queue\Message;
 use Flowpack\JobQueue\Common\Queue\QueueInterface;
@@ -45,6 +46,13 @@ class UpdateAliasJob implements JobInterface
     protected $acceptedFailedJobs = -1;
 
     /**
+     * @Flow\InjectConfiguration(path="cleanupIndicesAfterSuccessfulSwitch")
+     * @var bool
+     */
+    protected $cleanupIndicesAfterSuccessfulSwitch = true;
+
+
+    /**
      * @param string $indexPostfix
      */
     public function __construct($indexPostfix)
@@ -66,6 +74,11 @@ class UpdateAliasJob implements JobInterface
         if ($this->shouldIndexBeSwitched($queue)) {
             $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
             $this->nodeIndexer->updateIndexAlias();
+
+            if ($this->cleanupIndicesAfterSuccessfulSwitch === true) {
+                $this->cleanupOldIndices();
+            }
+
             $this->log(sprintf('action=indexing step=index-switched alias=%s message="Index was switched successfully"', $this->indexPostfix), LOG_NOTICE);
         } else {
             $this->log(sprintf('action=indexing step=index-switched alias=%s message="Index was not switched due to %s failed batches in the current queue"', $this->indexPostfix, $queue->countFailed()), LOG_ERR);
@@ -92,6 +105,28 @@ class UpdateAliasJob implements JobInterface
     public function getLabel(): string
     {
         return sprintf('ElasticSearch Indexing Job (%s)', $this->getIdentifier());
+    }
+
+    /**
+     * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
+     */
+    protected function cleanupOldIndices()
+    {
+        try {
+            $indicesToBeRemoved = $this->nodeIndexer->removeOldIndices();
+            if (count($indicesToBeRemoved) > 0) {
+                foreach ($indicesToBeRemoved as $indexToBeRemoved) {
+                    $this->log(sprintf('action=indexing step=index-switched alias=%s message="Old index was successfully removed"', $indexToBeRemoved), LOG_INFO);
+                }
+            }
+        } catch (ApiException $exception) {
+            $response = json_decode($exception->getResponse());
+            if ($response->error instanceof \stdClass) {
+                $this->log(sprintf('action=indexing step=index-switched alias=%s message="Old indices could not be removed. ElasticSearch responded with status %s, saying "%s: %s"', $this->indexPostfix, $response->status, $response->error->type, $response->error->reason), LOG_ERR);
+            } else {
+                $this->log(sprintf('action=indexing step=index-switched alias=%s message="Old indices could not be removed. ElasticSearch responded with status %s, saying "%s"', $this->indexPostfix, $response->status, $response->error), LOG_ERR);
+            }
+        }
     }
 
     /**

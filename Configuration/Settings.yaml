@@ -9,6 +9,8 @@ Flowpack:
       # -1 means, accept any number of failures
       acceptedFailedJobs: 0
 
+      # Run a nodeindex:cleanup after the node switching job switched the index
+      cleanupIndicesAfterSuccessfulSwitch: true
   JobQueue:
     Common:
       presets:
