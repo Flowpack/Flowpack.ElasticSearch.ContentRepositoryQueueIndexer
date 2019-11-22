@@ -56,6 +56,16 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
             return;
         }
 
+        if ($this->settings['indexAllWorkspaces'] === false) {
+            if ($targetWorkspaceName !== null && $targetWorkspaceName !== 'live') {
+                return;
+            }
+
+            if ($targetWorkspaceName === null && $node->getContext()->getWorkspaceName() !== 'live') {
+                return;
+            }
+        }
+
         $indexingJob = new IndexingJob($this->indexNamePostfix, $targetWorkspaceName, $this->nodeAsArray($node));
         $this->jobManager->queue(NodeIndexQueueCommandController::LIVE_QUEUE_NAME, $indexingJob);
     }
@@ -70,6 +80,16 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
             parent::removeNode($node, $targetWorkspaceName);
 
             return;
+        }
+
+        if ($this->settings['indexAllWorkspaces'] === false) {
+            if ($targetWorkspaceName !== null && $targetWorkspaceName !== 'live') {
+                return;
+            }
+
+            if ($targetWorkspaceName === null && $node->getContext()->getWorkspaceName() !== 'live') {
+                return;
+            }
         }
 
         $removalJob = new RemovalJob($this->indexNamePostfix, $targetWorkspaceName, $this->nodeAsArray($node));
