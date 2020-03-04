@@ -50,10 +50,24 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
      */
     public function indexNode(NodeInterface $node, $targetWorkspaceName = null)
     {
+        if( $node->isRemoved() ){
+            $this->removeNode($node, $targetWorkspaceName);
+            return;
+        }
         if ($this->enableLiveAsyncIndexing !== true) {
             parent::indexNode($node, $targetWorkspaceName);
 
             return;
+        }
+
+        if ($this->settings['indexAllWorkspaces'] === false) {
+            if ($targetWorkspaceName !== null && $targetWorkspaceName !== 'live') {
+                return;
+            }
+
+            if ($targetWorkspaceName === null && $node->getContext()->getWorkspaceName() !== 'live') {
+                return;
+            }
         }
 
         $indexingJob = new IndexingJob($this->indexNamePostfix, $targetWorkspaceName, $this->nodeAsArray($node));
@@ -72,6 +86,16 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
             return;
         }
 
+        if ($this->settings['indexAllWorkspaces'] === false) {
+            if ($targetWorkspaceName !== null && $targetWorkspaceName !== 'live') {
+                return;
+            }
+
+            if ($targetWorkspaceName === null && $node->getContext()->getWorkspaceName() !== 'live') {
+                return;
+            }
+        }
+
         $removalJob = new RemovalJob($this->indexNamePostfix, $targetWorkspaceName, $this->nodeAsArray($node));
         $this->jobManager->queue(NodeIndexQueueCommandController::LIVE_QUEUE_NAME, $removalJob);
     }
@@ -88,7 +112,7 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
             [
                 'persistenceObjectIdentifier' => $this->persistenceManager->getIdentifierByObject($node->getNodeData()),
                 'identifier' => $node->getIdentifier(),
-                'dimensions' => $node->getDimensions(),
+                'dimensions' => $node->getContext()->getDimensions(),
                 'workspace' => $node->getWorkspace()->getName(),
                 'nodeType' => $node->getNodeType()->getName(),
                 'path' => $node->getPath()
