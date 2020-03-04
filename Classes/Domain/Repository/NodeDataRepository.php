@@ -14,6 +14,8 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository
  */
 
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Internal\Hydration\IterableResult;
 use Doctrine\ORM\QueryBuilder;
 use Neos\ContentRepository\Domain\Model\NodeData;
@@ -29,7 +31,7 @@ class NodeDataRepository extends Repository
 
     /**
      * @Flow\Inject
-     * @var ObjectManager
+     * @var EntityManagerInterface
      */
     protected $entityManager;
 
