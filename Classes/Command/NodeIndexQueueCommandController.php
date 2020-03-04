@@ -102,14 +102,16 @@ class NodeIndexQueueCommandController extends CommandController
      * Index all nodes by creating a new index and when everything was completed, switch the index alias.
      *
      * @param string $workspace
+     * @throws ConfigurationException
      * @throws Exception
-     * @throws StopActionException
-     * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      * @throws StopCommandException
+     * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
+     * @throws \Flowpack\ElasticSearch\Exception
+     * @throws \Neos\Flow\Http\Exception
      */
     public function buildCommand(string $workspace = null): void
     {
-        $indexPostfix = time();
+        $indexPostfix = (string) time();
         $indexName = $this->createNextIndex($indexPostfix);
         $this->updateMapping($indexPostfix);
 
