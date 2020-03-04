@@ -88,7 +88,7 @@ class UpdateAliasJob implements JobInterface
                 $this->cleanupOldIndices();
             }
 
-            $this->logger->info(sprintf('Index was switched successfully tp %s', $this->indexPostfix), LogEnvironment::fromMethodName(__METHOD__));
+            $this->logger->info(sprintf('Index was switched successfully to %s', $this->indexPostfix), LogEnvironment::fromMethodName(__METHOD__));
         } else {
             $this->logger->error(sprintf('Index %s was not switched due to %s failed batches in the current queue"', $this->indexPostfix, $queue->countFailed()), LogEnvironment::fromMethodName(__METHOD__));
         }

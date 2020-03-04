@@ -41,8 +41,8 @@ use Psr\Log\LoggerInterface;
  */
 class NodeIndexQueueCommandController extends CommandController
 {
-    const BATCH_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
-    const LIVE_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live';
+    protected const BATCH_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
+    public const LIVE_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live';
 
     /**
      * @Flow\Inject
@@ -108,6 +108,7 @@ class NodeIndexQueueCommandController extends CommandController
      * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      * @throws \Flowpack\ElasticSearch\Exception
      * @throws \Neos\Flow\Http\Exception
+     * @throws \Exception
      */
     public function buildCommand(string $workspace = null): void
     {
@@ -138,7 +139,7 @@ class NodeIndexQueueCommandController extends CommandController
         $updateAliasJob = new UpdateAliasJob($indexPostfix);
         $this->jobManager->queue(self::BATCH_QUEUE_NAME, $updateAliasJob);
 
-        $this->outputLine("Indexing jobs created for queue %s with success ...", [self::BATCH_QUEUE_NAME]);
+        $this->outputLine('Indexing jobs created for queue %s with success ...', [self::BATCH_QUEUE_NAME]);
         $this->outputSystemReport();
         $this->outputLine();
     }
