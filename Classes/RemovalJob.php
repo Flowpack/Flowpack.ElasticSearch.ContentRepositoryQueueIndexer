@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
 
 /*
@@ -11,17 +13,26 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
  * source code.
  */
 
+use Neos\Flow\Annotations as Flow;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception;
 use Flowpack\JobQueue\Common\Queue\Message;
 use Flowpack\JobQueue\Common\Queue\QueueInterface;
 use Neos\ContentRepository\Domain\Model\NodeData;
 use Neos\ContentRepository\Domain\Model\NodeInterface;
+use Neos\Flow\Log\ThrowableStorageInterface;
+use Neos\Flow\Log\Utility\LogEnvironment;
 
 /**
  * Elasticsearch Node Removal Job
  */
 class RemovalJob extends AbstractIndexingJob
 {
+    /**
+     * @Flow\Inject
+     * @var ThrowableStorageInterface
+     */
+    protected $throwableStorage;
+
     /**
      * Execute the job removal of nodes.
      *
@@ -44,8 +55,9 @@ class RemovalJob extends AbstractIndexingJob
                     try {
                         $nodeData = $this->fakeNodeDataFactory->createFromPayload($node);
                     } catch (Exception $exception) {
-                        $this->log(sprintf('action=removal step=failed node=%s message="Node data could not be loaded or faked"', $node['identifier']), \LOG_CRIT);
-                        $this->_logger->logException($exception);
+                        $message = $this->throwableStorage->logThrowable($exception);
+                        $this->logger->error(sprintf('Node data of node %s could not be loaded or faked: %s"', $node['identifier'], $message), LogEnvironment::fromMethodName(__METHOD__));
+
                         continue;
                     }
                 }
@@ -61,12 +73,12 @@ class RemovalJob extends AbstractIndexingJob
 
                 // Skip this iteration if the node can not be fetched from the current context
                 if (!$currentNode instanceof NodeInterface) {
-                    $this->log(sprintf('action=removal step=failed node=%s message="Node could not be processed"', $node['identifier']));
+                    $this->logger->info(sprintf('Node %s could not be processed', $node['identifier']), LogEnvironment::fromMethodName(__METHOD__));
                     continue;
                 }
 
                 $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
-                $this->log(sprintf('action=removal step=started node=%s', $currentNode->getIdentifier()));
+                $this->logger->info(sprintf('Removed node %s', $currentNode->getIdentifier()), LogEnvironment::fromMethodName(__METHOD__));
 
                 $this->nodeIndexer->removeNode($currentNode, $this->targetWorkspaceName);
             }
@@ -74,7 +86,7 @@ class RemovalJob extends AbstractIndexingJob
             $this->nodeIndexer->flush();
             $duration = microtime(true) - $startTime;
             $rate = $numberOfNodes / $duration;
-            $this->log(sprintf('action=removal step=finished number_of_nodes=%d duration=%f nodes_per_second=%f', $numberOfNodes, $duration, $rate));
+            $this->logger->info(sprintf('Removed %s nodes in %s seconds (%s nodes per second)', $numberOfNodes, $duration, $rate), LogEnvironment::fromMethodName(__METHOD__));
         });
 
         return true;

@@ -19,10 +19,16 @@ use Neos\ContentRepository\Domain\Factory\NodeFactory;
 use Neos\ContentRepository\Domain\Service\ContextFactoryInterface;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Utility\Algorithms;
+use Psr\Log\LoggerInterface;
 
 abstract class AbstractIndexingJob implements JobInterface
 {
-    use LoggerTrait;
+
+    /**
+     * @FLow\Inject
+     * @var LoggerInterface
+     */
+    protected $logger;
 
     /**
      * @var NodeIndexer
@@ -78,6 +84,7 @@ abstract class AbstractIndexingJob implements JobInterface
      * @param string $indexPostfix
      * @param string $targetWorkspaceName In case indexing is triggered during publishing, a target workspace name will be passed in
      * @param array $nodes
+     * @throws \Exception
      */
     public function __construct($indexPostfix, $targetWorkspaceName, array $nodes)
     {
@@ -92,7 +99,7 @@ abstract class AbstractIndexingJob implements JobInterface
      *
      * @return string A job identifier
      */
-    public function getIdentifier()
+    public function getIdentifier(): string
     {
         return $this->identifier;
     }

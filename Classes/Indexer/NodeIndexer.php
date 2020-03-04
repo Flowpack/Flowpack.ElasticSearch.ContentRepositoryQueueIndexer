@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Indexer;
 
 /*
@@ -21,7 +23,7 @@ use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 
 /**
- * Nodeindexer for use in batch jobs
+ * NodeIndexer for use in batch jobs
  */
 class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
 {
@@ -46,9 +48,9 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
     /**
      * @param NodeInterface $node
      * @param string|null $targetWorkspaceName In case indexing is triggered during publishing, a target workspace name will be passed in
-     * @throws \Neos\ContentRepository\Search\Exception\IndexingException
+     * @throws ContentRepositoryAdaptor\Exception
      */
-    public function indexNode(NodeInterface $node, $targetWorkspaceName = null)
+    public function indexNode(NodeInterface $node, $targetWorkspaceName = null): void
     {
         if( $node->isRemoved() ){
             $this->removeNode($node, $targetWorkspaceName);
@@ -77,8 +79,12 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
     /**
      * @param NodeInterface $node
      * @param string|null $targetWorkspaceName In case indexing is triggered during publishing, a target workspace name will be passed in
+     * @throws ContentRepositoryAdaptor\Exception
+     * @throws \Flowpack\ElasticSearch\Exception
+     * @throws \Neos\Flow\Persistence\Exception\IllegalObjectTypeException
+     * @throws \Neos\Utility\Exception\FilesException
      */
-    public function removeNode(NodeInterface $node, $targetWorkspaceName = null)
+    public function removeNode(NodeInterface $node, string $targetWorkspaceName = null): void
     {
         if ($this->enableLiveAsyncIndexing !== true) {
             parent::removeNode($node, $targetWorkspaceName);
@@ -106,7 +112,7 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
      * @param NodeInterface $node
      * @return array
      */
-    protected function nodeAsArray(NodeInterface $node)
+    protected function nodeAsArray(NodeInterface $node): array
     {
         return [
             [

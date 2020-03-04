@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Command;
 
 /*
@@ -12,6 +14,7 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Command;
  */
 
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Driver\NodeTypeMappingBuilderInterface;
+use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception\ConfigurationException;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\IndexingJob;
@@ -24,8 +27,12 @@ use Flowpack\JobQueue\Common\Queue\QueueManager;
 use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Cli\CommandController;
+use Neos\Flow\Cli\Exception\StopCommandException;
+use Neos\Flow\Log\Utility\LogEnvironment;
+use Neos\Flow\Mvc\Exception\StopActionException;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\Utility\Files;
+use Psr\Log\LoggerInterface;
 
 /**
  * Provides CLI features for index handling
@@ -34,10 +41,14 @@ use Neos\Utility\Files;
  */
 class NodeIndexQueueCommandController extends CommandController
 {
-    use LoggerTrait;
-
     const BATCH_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer';
     const LIVE_QUEUE_NAME = 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live';
+
+    /**
+     * @Flow\Inject
+     * @var LoggerInterface
+     */
+    protected $logger;
 
     /**
      * @var JobManager
@@ -91,11 +102,12 @@ class NodeIndexQueueCommandController extends CommandController
      * Index all nodes by creating a new index and when everything was completed, switch the index alias.
      *
      * @param string $workspace
-     * @throws \Flowpack\JobQueue\Common\Exception
-     * @throws \Neos\Flow\Mvc\Exception\StopActionException
+     * @throws Exception
+     * @throws StopActionException
      * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
+     * @throws StopCommandException
      */
-    public function buildCommand($workspace = null)
+    public function buildCommand(string $workspace = null): void
     {
         $indexPostfix = time();
         $indexName = $this->createNextIndex($indexPostfix);
@@ -120,6 +132,7 @@ class NodeIndexQueueCommandController extends CommandController
             $this->outputLine();
             $this->indexWorkspace($workspace, $indexPostfix);
         }
+
         $updateAliasJob = new UpdateAliasJob($indexPostfix);
         $this->jobManager->queue(self::BATCH_QUEUE_NAME, $updateAliasJob);
 
@@ -134,9 +147,10 @@ class NodeIndexQueueCommandController extends CommandController
      * @param int $limit If set, only the given amount of jobs are processed (successful or not) before the script exits
      * @param bool $verbose Output debugging information
      * @return void
-     * @throws \Neos\Flow\Mvc\Exception\StopActionException
+     * @throws StopActionException
+     * @throws StopCommandException
      */
-    public function workCommand($queue = 'batch', $exitAfter = null, $limit = null, $verbose = false)
+    public function workCommand(string $queue = 'batch', int $exitAfter = null, int $limit = null, $verbose = false): void
     {
         $allowedQueues = [
             'batch' => self::BATCH_QUEUE_NAME,
@@ -201,7 +215,7 @@ class NodeIndexQueueCommandController extends CommandController
     /**
      * Flush the index queue
      */
-    public function flushCommand()
+    public function flushCommand(): void
     {
         try {
             $this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->flush();
@@ -235,8 +249,9 @@ class NodeIndexQueueCommandController extends CommandController
     /**
      * @param string $workspaceName
      * @param string $indexPostfix
+     * @throws \Exception
      */
-    protected function indexWorkspace($workspaceName, $indexPostfix)
+    protected function indexWorkspace(string $workspaceName, string $indexPostfix): void
     {
         $this->outputLine('<info>++</info> Indexing %s workspace', [$workspaceName]);
         $nodeCounter = 0;
@@ -277,12 +292,15 @@ class NodeIndexQueueCommandController extends CommandController
      * @param string $indexPostfix
      * @return string
      * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
+     * @throws ConfigurationException
+     * @throws \Flowpack\ElasticSearch\Exception
+     * @throws \Neos\Flow\Http\Exception
      */
-    protected function createNextIndex($indexPostfix)
+    protected function createNextIndex(string $indexPostfix): string
     {
         $this->nodeIndexer->setIndexNamePostfix($indexPostfix);
         $this->nodeIndexer->getIndex()->create();
-        $this->log(sprintf('action=indexing step=index-created index=%s', $this->nodeIndexer->getIndexName()), LOG_INFO);
+        $this->logger->info(sprintf('Index %s created', $this->nodeIndexer->getIndexName()), LogEnvironment::fromMethodName(__METHOD__));
 
         return $this->nodeIndexer->getIndexName();
     }
@@ -290,10 +308,13 @@ class NodeIndexQueueCommandController extends CommandController
     /**
      * Update Index Mapping
      *
+     * @param string $indexPostfix
      * @return void
+     * @throws ConfigurationException
      * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
+     * @throws \Flowpack\ElasticSearch\Exception
      */
-    protected function updateMapping($indexPostfix)
+    protected function updateMapping(string $indexPostfix): void
     {
         $nodeTypeMappingCollection = $this->nodeTypeMappingBuilder->buildMappingInformation($this->nodeIndexer->getIndex());
         foreach ($nodeTypeMappingCollection as $mapping) {
@@ -301,6 +322,6 @@ class NodeIndexQueueCommandController extends CommandController
             /** @var Mapping $mapping */
             $mapping->apply();
         }
-        $this->log(sprintf('action=indexing step=mapping-updated index=%s', $this->nodeIndexer->getIndexName()), LOG_INFO);
+        $this->logger->info(sprintf('Mapping updated for index %s', $this->nodeIndexer->getIndexName()), LogEnvironment::fromMethodName(__METHOD__));
     }
 }
