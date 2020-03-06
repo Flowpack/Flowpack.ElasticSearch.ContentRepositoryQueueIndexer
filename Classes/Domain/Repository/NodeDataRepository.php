@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository;
 
 /*
@@ -12,6 +14,8 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository
  */
 
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Internal\Hydration\IterableResult;
 use Doctrine\ORM\QueryBuilder;
 use Neos\ContentRepository\Domain\Model\NodeData;
@@ -23,11 +27,11 @@ use Neos\Flow\Persistence\Repository;
  */
 class NodeDataRepository extends Repository
 {
-    const ENTITY_CLASSNAME = NodeData::class;
+    public const ENTITY_CLASSNAME = NodeData::class;
 
     /**
      * @Flow\Inject
-     * @var ObjectManager
+     * @var EntityManagerInterface
      */
     protected $entityManager;
 
@@ -37,7 +41,7 @@ class NodeDataRepository extends Repository
      * @param integer $maxResults
      * @return IterableResult
      */
-    public function findAllBySiteAndWorkspace($workspaceName, $firstResult = 0, $maxResults = 1000)
+    public function findAllBySiteAndWorkspace($workspaceName, $firstResult = 0, $maxResults = 1000): IterableResult
     {
         /** @var QueryBuilder $queryBuilder */
         $queryBuilder = $this->entityManager->createQueryBuilder();

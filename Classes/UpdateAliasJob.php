@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
 
 /*
@@ -17,11 +19,17 @@ use Flowpack\JobQueue\Common\Job\JobInterface;
 use Flowpack\JobQueue\Common\Queue\Message;
 use Flowpack\JobQueue\Common\Queue\QueueInterface;
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Log\Utility\LogEnvironment;
 use Neos\Flow\Utility\Algorithms;
+use Psr\Log\LoggerInterface;
 
 class UpdateAliasJob implements JobInterface
 {
-    use LoggerTrait;
+    /**
+     * @Flow\Inject
+     * @var LoggerInterface
+     */
+    protected $logger;
 
     /**
      * @var NodeIndexer
@@ -54,6 +62,7 @@ class UpdateAliasJob implements JobInterface
 
     /**
      * @param string $indexPostfix
+     * @throws \Exception
      */
     public function __construct($indexPostfix)
     {
@@ -79,9 +88,9 @@ class UpdateAliasJob implements JobInterface
                 $this->cleanupOldIndices();
             }
 
-            $this->log(sprintf('action=indexing step=index-switched alias=%s message="Index was switched successfully"', $this->indexPostfix), LOG_NOTICE);
+            $this->logger->info(sprintf('Index was switched successfully to %s', $this->indexPostfix), LogEnvironment::fromMethodName(__METHOD__));
         } else {
-            $this->log(sprintf('action=indexing step=index-switched alias=%s message="Index was not switched due to %s failed batches in the current queue"', $this->indexPostfix, $queue->countFailed()), LOG_ERR);
+            $this->logger->error(sprintf('Index %s was not switched due to %s failed batches in the current queue"', $this->indexPostfix, $queue->countFailed()), LogEnvironment::fromMethodName(__METHOD__));
         }
 
         return true;
@@ -92,7 +101,7 @@ class UpdateAliasJob implements JobInterface
      *
      * @return string A job identifier
      */
-    public function getIdentifier()
+    public function getIdentifier(): string
     {
         return $this->identifier;
     }
@@ -110,21 +119,21 @@ class UpdateAliasJob implements JobInterface
     /**
      * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      */
-    protected function cleanupOldIndices()
+    protected function cleanupOldIndices(): void
     {
         try {
             $indicesToBeRemoved = $this->nodeIndexer->removeOldIndices();
             if (count($indicesToBeRemoved) > 0) {
                 foreach ($indicesToBeRemoved as $indexToBeRemoved) {
-                    $this->log(sprintf('action=indexing step=index-switched alias=%s message="Old index was successfully removed"', $indexToBeRemoved), LOG_INFO);
+                    $this->logger->info(sprintf('Old index "%s" was successfully removed', $indexToBeRemoved), LogEnvironment::fromMethodName(__METHOD__));
                 }
             }
         } catch (ApiException $exception) {
-            $response = json_decode($exception->getResponse());
+            $response = json_decode($exception->getResponse(), true, 512, JSON_THROW_ON_ERROR);
             if ($response->error instanceof \stdClass) {
-                $this->log(sprintf('action=indexing step=index-switched alias=%s message="Old indices could not be removed. ElasticSearch responded with status %s, saying "%s: %s"', $this->indexPostfix, $response->status, $response->error->type, $response->error->reason), LOG_ERR);
+                $this->logger->error(sprintf('Old indices for alias %s could not be removed. ElasticSearch responded with status %s, saying "%s: %s"', $this->indexPostfix, $response->status, $response->error->type, $response->error->reason), LogEnvironment::fromMethodName(__METHOD__));
             } else {
-                $this->log(sprintf('action=indexing step=index-switched alias=%s message="Old indices could not be removed. ElasticSearch responded with status %s, saying "%s"', $this->indexPostfix, $response->status, $response->error), LOG_ERR);
+                $this->logger->error(sprintf('Old indices for alias %s could not be removed. ElasticSearch responded with status %s, saying "%s"', $this->indexPostfix, $response->status, $response->error), LogEnvironment::fromMethodName(__METHOD__));
             }
         }
     }
