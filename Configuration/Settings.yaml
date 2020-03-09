@@ -18,7 +18,7 @@ Flowpack:
           preset: 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer'
 
         'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live':
-          preset: 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer'
+          preset: 'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live'
 
       presets:
         'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
