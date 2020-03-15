@@ -59,15 +59,21 @@ class UpdateAliasJob implements JobInterface
      */
     protected $cleanupIndicesAfterSuccessfulSwitch = true;
 
+    /**
+     * @var array|null
+     */
+    protected $dimensionValues;
 
     /**
      * @param string $indexPostfix
+     * @param array $dimensionValues
      * @throws \Exception
      */
-    public function __construct($indexPostfix)
+    public function __construct($indexPostfix, array $dimensionValues = [])
     {
         $this->identifier = Algorithms::generateRandomString(24);
         $this->indexPostfix = $indexPostfix;
+        $this->dimensionValues = $dimensionValues;
     }
 
     /**
@@ -82,6 +88,7 @@ class UpdateAliasJob implements JobInterface
     {
         if ($this->shouldIndexBeSwitched($queue)) {
             $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
+            $this->nodeIndexer->setDimensions($this->dimensionValues);
             $this->nodeIndexer->updateIndexAlias();
 
             if ($this->cleanupIndicesAfterSuccessfulSwitch === true) {

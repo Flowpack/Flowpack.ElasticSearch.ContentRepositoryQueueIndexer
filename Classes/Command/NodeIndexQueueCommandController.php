@@ -13,6 +13,7 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Command;
  * source code.
  */
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Driver\NodeTypeMappingBuilderInterface;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception\ConfigurationException;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
@@ -99,25 +100,28 @@ class NodeIndexQueueCommandController extends CommandController
     protected $batchSize;
 
     /**
+     * @Flow\Inject
+     * @var \Neos\ContentRepository\Domain\Service\ContentDimensionCombinator
+     */
+    protected $contentDimensionCombinator;
+
+    /**
      * Index all nodes by creating a new index and when everything was completed, switch the index alias.
      *
      * @param string $workspace
-     * @throws ConfigurationException
      * @throws Exception
      * @throws StopCommandException
      * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      * @throws \Flowpack\ElasticSearch\Exception
-     * @throws \Neos\Flow\Http\Exception
      * @throws \Exception
      */
     public function buildCommand(string $workspace = null): void
     {
-        $indexPostfix = (string) time();
-        $indexName = $this->createNextIndex($indexPostfix);
+        $indexPostfix = (string)time();
         $this->updateMapping($indexPostfix);
 
         $this->outputLine();
-        $this->outputLine('<b>Indexing on %s ...</b>', [$indexName]);
+        $this->outputLine('<b>Indexing on %s ...</b>', [$indexPostfix]);
 
         $pendingJobs = $this->queueManager->getQueue(self::BATCH_QUEUE_NAME)->countReady();
         if ($pendingJobs !== 0) {
@@ -136,8 +140,11 @@ class NodeIndexQueueCommandController extends CommandController
             $this->indexWorkspace($workspace, $indexPostfix);
         }
 
-        $updateAliasJob = new UpdateAliasJob($indexPostfix);
-        $this->jobManager->queue(self::BATCH_QUEUE_NAME, $updateAliasJob);
+        $combinations = new ArrayCollection($this->contentDimensionCombinator->getAllAllowedCombinations());
+        $combinations->map(function (array $dimensionValues) use ($indexPostfix) {
+            $updateAliasJob = new UpdateAliasJob($indexPostfix, $dimensionValues);
+            $this->jobManager->queue(self::BATCH_QUEUE_NAME, $updateAliasJob);
+        });
 
         $this->outputLine('Indexing jobs created for queue %s with success ...', [self::BATCH_QUEUE_NAME]);
         $this->outputSystemReport();
@@ -159,9 +166,11 @@ class NodeIndexQueueCommandController extends CommandController
             'batch' => self::BATCH_QUEUE_NAME,
             'live' => self::LIVE_QUEUE_NAME
         ];
+
         if (!isset($allowedQueues[$queue])) {
             $this->output('Invalid queue, should be "live" or "batch"');
         }
+
         $queueName = $allowedQueues[$queue];
 
         if ($verbose) {
@@ -181,18 +190,23 @@ class NodeIndexQueueCommandController extends CommandController
             if ($exitAfter !== null) {
                 $timeout = max(1, $exitAfter - (time() - $startTime));
             }
+
+
             try {
                 $message = $this->jobManager->waitAndExecute($queueName, $timeout);
-            } catch (Exception $exception) {
-                $numberOfJobExecutions++;
-                $this->outputLine('<error>%s</error>', [$exception->getMessage()]);
-                if ($verbose && $exception->getPrevious() instanceof \Exception) {
-                    $this->outputLine('  Reason: %s', [$exception->getPrevious()->getMessage()]);
-                }
             } catch (\Exception $exception) {
-                $this->outputLine('<error>Unexpected exception during job execution: %s, aborting...</error>', [$exception->getMessage()]);
-                $this->quit(1);
+                $numberOfJobExecutions++;
+
+                $verbose && $this->outputLine('<error>%s</error>', [$exception->getMessage()]);
+
+                if ($exception->getPrevious() instanceof \Exception) {
+                    $verbose && $this->outputLine('  Reason: %s', [$exception->getPrevious()->getMessage()]);
+                    $this->logger->error(sprintf('Indexing job failed: %s. Detailed reason %s', $exception->getMessage(), $exception->getPrevious()->getMessage()), LogEnvironment::fromMethodName(__METHOD__));
+                } else {
+                    $this->logger->error('Indexing job failed: ' . $exception->getMessage(), LogEnvironment::fromMethodName(__METHOD__));
+                }
             }
+
             if ($message !== null) {
                 $numberOfJobExecutions++;
                 if ($verbose) {
@@ -200,18 +214,21 @@ class NodeIndexQueueCommandController extends CommandController
                     $this->outputLine('<success>Successfully executed job "%s" (%s)</success>', [$message->getIdentifier(), $messagePayload]);
                 }
             }
+
             if ($exitAfter !== null && (time() - $startTime) >= $exitAfter) {
                 if ($verbose) {
                     $this->outputLine('Quitting after %d seconds due to <i>--exit-after</i> flag', [time() - $startTime]);
                 }
                 $this->quit();
             }
+
             if ($limit !== null && $numberOfJobExecutions >= $limit) {
                 if ($verbose) {
                     $this->outputLine('Quitting after %d executed job%s due to <i>--limit</i> flag', [$numberOfJobExecutions, $numberOfJobExecutions > 1 ? 's' : '']);
                 }
                 $this->quit();
             }
+
         } while (true);
     }
 
@@ -232,7 +249,7 @@ class NodeIndexQueueCommandController extends CommandController
     /**
      * Output system report for CLI commands
      */
-    protected function outputSystemReport()
+    protected function outputSystemReport(): void
     {
         $this->outputLine();
         $this->outputLine('Memory Usage   : %s', [Files::bytesToSizeString(memory_get_peak_usage(true))]);
@@ -292,39 +309,29 @@ class NodeIndexQueueCommandController extends CommandController
     }
 
     /**
-     * @param string $indexPostfix
-     * @return string
-     * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
-     * @throws ConfigurationException
-     * @throws \Flowpack\ElasticSearch\Exception
-     * @throws \Neos\Flow\Http\Exception
-     */
-    protected function createNextIndex(string $indexPostfix): string
-    {
-        $this->nodeIndexer->setIndexNamePostfix($indexPostfix);
-        $this->nodeIndexer->getIndex()->create();
-        $this->logger->info(sprintf('Index %s created', $this->nodeIndexer->getIndexName()), LogEnvironment::fromMethodName(__METHOD__));
-
-        return $this->nodeIndexer->getIndexName();
-    }
-
-    /**
      * Update Index Mapping
      *
      * @param string $indexPostfix
      * @return void
-     * @throws ConfigurationException
      * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      * @throws \Flowpack\ElasticSearch\Exception
      */
     protected function updateMapping(string $indexPostfix): void
     {
-        $nodeTypeMappingCollection = $this->nodeTypeMappingBuilder->buildMappingInformation($this->nodeIndexer->getIndex());
-        foreach ($nodeTypeMappingCollection as $mapping) {
+        $combinations = new ArrayCollection($this->contentDimensionCombinator->getAllAllowedCombinations());
+        $combinations->map(function (array $dimensionValues) use ($indexPostfix) {
+            $this->nodeIndexer->setDimensions($dimensionValues);
             $this->nodeIndexer->setIndexNamePostfix($indexPostfix);
-            /** @var Mapping $mapping */
-            $mapping->apply();
-        }
-        $this->logger->info(sprintf('Mapping updated for index %s', $this->nodeIndexer->getIndexName()), LogEnvironment::fromMethodName(__METHOD__));
+
+            if (!$this->nodeIndexer->getIndex()->exists()) {
+                $this->nodeIndexer->getIndex()->create();
+            }
+            $nodeTypeMappingCollection = $this->nodeTypeMappingBuilder->buildMappingInformation($this->nodeIndexer->getIndex());
+            foreach ($nodeTypeMappingCollection as $mapping) {
+                /** @var Mapping $mapping */
+                $mapping->apply();
+            }
+            $this->logger->info(sprintf('Mapping updated for index %s', $this->nodeIndexer->getIndexName()), LogEnvironment::fromMethodName(__METHOD__));
+        });
     }
 }
