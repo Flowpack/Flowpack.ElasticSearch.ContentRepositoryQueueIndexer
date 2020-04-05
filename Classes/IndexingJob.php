@@ -58,11 +58,12 @@ class IndexingJob extends AbstractIndexingJob
 
                 // Skip this iteration if the node can not be fetched from the current context
                 if (!$currentNode instanceof NodeInterface) {
-                    $this->logger->warning(sprintf('Node %s could not be processed"', $node['identifier']), LogEnvironment::fromMethodName(__METHOD__));
+                    $this->logger->warning(sprintf('Node %s could not be created from node data"', $node['identifier']), LogEnvironment::fromMethodName(__METHOD__));
                     continue;
                 }
 
                 $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
+                $this->nodeIndexer->setDimensions($node['dimensions']);
                 $this->nodeIndexer->indexNode($currentNode, $this->targetWorkspaceName);
             }
 
