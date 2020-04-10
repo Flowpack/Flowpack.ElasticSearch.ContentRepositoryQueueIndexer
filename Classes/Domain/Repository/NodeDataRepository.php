@@ -44,30 +44,32 @@ class NodeDataRepository extends Repository
 
     /**
      * @param string $workspaceName
-     * @param integer $firstResult
-     * @param integer $maxResults
+     * @param int $firstResult
+     * @param int $maxResults
      * @return IterableResult
      * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      */
-    public function findAllBySiteAndWorkspace($workspaceName, $firstResult = 0, $maxResults = 1000): IterableResult
+    public function findAllBySiteAndWorkspace(string $workspaceName, int $firstResult = 0, int $maxResults = 1000): IterableResult
     {
         /** @var QueryBuilder $queryBuilder */
         $queryBuilder = $this->entityManager->createQueryBuilder();
-
-        $excludedNodeTypes = array_keys(array_filter($this->nodeTypeIndexingConfiguration->getIndexableConfiguration(), static function($value) {
-            return !$value;
-        }));
-
         $queryBuilder->select('n.Persistence_Object_Identifier persistenceObjectIdentifier, n.identifier identifier, n.dimensionValues dimensions, n.nodeType nodeType, n.path path')
             ->from(NodeData::class, 'n')
             ->where('n.workspace = :workspace AND n.removed = :removed AND n.movedTo IS NULL')
-            ->andWhere($queryBuilder->expr()->notIn('n.nodeType', $excludedNodeTypes))
             ->setFirstResult((integer)$firstResult)
             ->setMaxResults((integer)$maxResults)
             ->setParameters([
                 ':workspace' => $workspaceName,
                 ':removed' => false,
             ]);
+
+        $excludedNodeTypes = array_keys(array_filter($this->nodeTypeIndexingConfiguration->getIndexableConfiguration(), static function($value) {
+            return !$value;
+        }));
+
+        if(!empty($excludedNodeTypes)) {
+            $queryBuilder->andWhere($queryBuilder->expr()->notIn('n.nodeType', $excludedNodeTypes));
+        }
 
         return $queryBuilder->getQuery()->iterate();
     }
