@@ -90,6 +90,7 @@ class UpdateAliasJob implements JobInterface
             $this->nodeIndexer->setIndexNamePostfix($this->indexPostfix);
             $this->nodeIndexer->setDimensions($this->dimensionValues);
             $this->nodeIndexer->updateIndexAlias();
+            $this->nodeIndexer->updateMainAlias();
 
             if ($this->cleanupIndicesAfterSuccessfulSwitch === true) {
                 $this->cleanupOldIndices();
