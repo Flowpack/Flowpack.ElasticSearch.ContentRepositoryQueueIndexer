@@ -36,8 +36,6 @@ Check the ```Settings.yaml``` to adapt based on the Queue package, you need to a
           presets:
             'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
               className: 'Flowpack\JobQueue\Common\Queue\FakeQueue'
-            'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live':
-              className: 'Flowpack\JobQueue\Common\Queue\FakeQueue'
 
 If you use the [doctrine](https://packagist.org/packages/flownative/jobqueue-doctrine) package you have to set the ```tableName``` manually:
 
@@ -47,11 +45,11 @@ If you use the [doctrine](https://packagist.org/packages/flownative/jobqueue-doc
           presets:
             'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
               className: 'Flowpack\JobQueue\Doctrine\Queue\DoctrineQueue'
+          queues:
+            'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer':
               options:
                 tableName: 'flowpack_jobqueue_QueueIndexer'
-
             'Flowpack.ElasticSearch.ContentRepositoryQueueIndexer.Live':
-              className: 'Flowpack\JobQueue\Doctrine\Queue\DoctrineQueue'
               options:
                 tableName: 'flowpack_jobqueue_QueueIndexerLive'
 
