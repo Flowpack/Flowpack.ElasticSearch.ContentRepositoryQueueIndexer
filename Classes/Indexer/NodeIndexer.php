@@ -22,6 +22,8 @@ use Neos\Flow\Persistence\PersistenceManagerInterface;
 
 /**
  * Nodeindexer for use in batch jobs
+ *
+ * @Flow\Scope("singleton")
  */
 class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
 {
