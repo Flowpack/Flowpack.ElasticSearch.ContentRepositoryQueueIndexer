@@ -17,6 +17,7 @@ use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
 use Neos\ContentRepository\Domain\Service\NodeTypeManager;
 use Neos\ContentRepository\Exception\NodeTypeNotFoundException;
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Persistence\Doctrine\PersistenceManager;
 
 /**
  * @Flow\Scope("singleton")
@@ -34,6 +35,12 @@ class FakeNodeDataFactory
      * @Flow\Inject
      */
     protected $nodeTypeManager;
+
+    /**
+     * @var PersistenceManager
+     * @Flow\Inject
+     */
+    protected $persistenceManager;
 
     /**
      * This creates a "fake" removed NodeData instance from the given payload
@@ -73,6 +80,11 @@ class FakeNodeDataFactory
         $nodeData->setProperty('uriPathSegment', 'fake-node');
 
         $nodeData->setRemoved(true);
+
+        // Ensure, the fake-node is not persisted
+        if ($this->persistenceManager->isNewObject($nodeData)) {
+            $this->persistenceManager->remove($nodeData);
+        }
 
         return $nodeData;
     }
