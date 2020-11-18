@@ -19,6 +19,7 @@ use Neos\ContentRepository\Domain\Repository\WorkspaceRepository;
 use Neos\ContentRepository\Domain\Service\NodeTypeManager;
 use Neos\ContentRepository\Exception\NodeTypeNotFoundException;
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Persistence\Doctrine\PersistenceManager;
 
 /**
  * @Flow\Scope("singleton")
@@ -38,13 +39,19 @@ class FakeNodeDataFactory
     protected $nodeTypeManager;
 
     /**
+     * @var PersistenceManager
+     * @Flow\Inject
+     */
+    protected $persistenceManager;
+
+    /**
      * This creates a "fake" removed NodeData instance from the given payload
      *
      * @param array $payload
      * @return NodeData
      * @throws Exception
      */
-    public function createFromPayload(array $payload)
+    public function createFromPayload(array $payload): NodeData
     {
         if (!isset($payload['workspace']) || empty($payload['workspace'])) {
             throw new Exception('Unable to create fake node data, missing workspace value', 1508448007);
@@ -75,6 +82,11 @@ class FakeNodeDataFactory
         $nodeData->setProperty('uriPathSegment', 'fake-node');
 
         $nodeData->setRemoved(true);
+
+        // Ensure, the fake-node is not persisted
+        if ($this->persistenceManager->isNewObject($nodeData)) {
+            $this->persistenceManager->remove($nodeData);
+        }
 
         return $nodeData;
     }
