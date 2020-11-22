@@ -327,10 +327,22 @@ class NodeIndexQueueCommandController extends CommandController
                 $this->nodeIndexer->getIndex()->create();
             }
             $nodeTypeMappingCollection = $this->nodeTypeMappingBuilder->buildMappingInformation($this->nodeIndexer->getIndex());
-            foreach ($nodeTypeMappingCollection as $mapping) {
-                /** @var Mapping $mapping */
-                $mapping->apply();
+
+            $properties = [];
+            $dynamicTemplates = [];
+            foreach ($nodeTypeMappingCollection as $nodeTypeMapping) {
+                /** @var Mapping $nodeTypeMapping */
+                $properties[] = $nodeTypeMapping->asArray()['properties'];
+                $dynamicTemplates[] = $nodeTypeMapping->asArray()['dynamic_templates'];
             }
+
+            $combinedMappings = [
+                'dynamic_templates' => array_merge([], ...$dynamicTemplates),
+                'properties' => array_merge([], ...$properties),
+            ];
+
+            $this->nodeIndexer->getIndex()->request('PUT', '/_mapping', [], json_encode($combinedMappings));
+
             $this->logger->info(sprintf('Mapping updated for index %s', $this->nodeIndexer->getIndexName()), LogEnvironment::fromMethodName(__METHOD__));
         });
     }
