@@ -4,7 +4,7 @@
   "description": "Neos CMS Elasticsearch indexer based on a job queue",
   "license": "MIT",
   "require": {
-    "neos/flow": "^5.1 || ^6.0",
+    "neos/flow": "^5.1 || ^6.0 || ^7.0",
     "flowpack/jobqueue-common": "^3.0 || dev-master",
     "flowpack/elasticsearch-contentrepositoryadaptor": "^7.0 || dev-master"
   },
