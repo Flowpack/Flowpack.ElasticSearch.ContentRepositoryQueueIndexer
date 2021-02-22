@@ -84,7 +84,7 @@ class FakeNodeDataFactory
         $nodeData->setRemoved(true);
 
         // Ensure, the fake-node is not persisted
-        if (false === $this->persistenceManager->isNewObject($nodeData)) {
+        if ($this->persistenceManager->isNewObject($nodeData) === false) {
             $this->persistenceManager->remove($nodeData);
         }
 
