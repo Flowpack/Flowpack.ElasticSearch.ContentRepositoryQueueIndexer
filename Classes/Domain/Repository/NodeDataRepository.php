@@ -44,12 +44,12 @@ class NodeDataRepository extends Repository
 
     /**
      * @param string $workspaceName
-     * @param string $lastPOD
+     * @param string $lastPOI
      * @param int $maxResults
      * @return IterableResult
      * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      */
-    public function findAllBySiteAndWorkspace(string $workspaceName, string $lastPOD=null, int $maxResults = 1000): IterableResult
+    public function findAllBySiteAndWorkspace(string $workspaceName, string $lastPOI=null, int $maxResults = 1000): IterableResult
     {
         /** @var QueryBuilder $queryBuilder */
         $queryBuilder = $this->entityManager->createQueryBuilder();
@@ -63,8 +63,8 @@ class NodeDataRepository extends Repository
             ])
             ->orderBy('n.Persistence_Object_Identifier');
 
-        if (!empty($lastPOD)) {
-            $queryBuilder->andWhere($queryBuilder->expr()->gt('n.Persistence_Object_Identifier', $queryBuilder->expr()->literal($lastPOD)));
+        if (!empty($lastPOI)) {
+            $queryBuilder->andWhere($queryBuilder->expr()->gt('n.Persistence_Object_Identifier', $queryBuilder->expr()->literal($lastPOI)));
         }
 
         $excludedNodeTypes = array_keys(array_filter($this->nodeTypeIndexingConfiguration->getIndexableConfiguration(), static function($value) {
