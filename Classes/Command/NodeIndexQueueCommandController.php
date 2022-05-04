@@ -276,12 +276,15 @@ class NodeIndexQueueCommandController extends CommandController
         $this->outputLine('<info>++</info> Indexing %s workspace', [$workspaceName]);
         $nodeCounter = 0;
         $offset = 0;
+        $lastPOI = null;
         while (true) {
-            $iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $offset, $this->batchSize);
+            $iterator = $this->nodeDataRepository->findAllBySiteAndWorkspace($workspaceName, $lastPOI, $this->batchSize);
 
             $jobData = [];
 
             foreach ($this->nodeDataRepository->iterate($iterator) as $data) {
+                $lastPOI = $data['persistenceObjectIdentifier'];
+
                 $jobData[] = [
                     'persistenceObjectIdentifier' => $data['persistenceObjectIdentifier'],
                     'identifier' => $data['identifier'],
