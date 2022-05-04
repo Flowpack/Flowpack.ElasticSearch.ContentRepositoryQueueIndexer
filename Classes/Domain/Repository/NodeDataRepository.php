@@ -13,11 +13,8 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository
  * source code.
  */
 
-use Doctrine\Common\Persistence\ObjectManager;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Internal\Hydration\IterableResult;
-use Doctrine\ORM\QueryBuilder;
 use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Service\NodeTypeIndexingConfiguration;
 use Neos\ContentRepository\Domain\Model\NodeData;
 use Neos\Flow\Annotations as Flow;
@@ -44,14 +41,13 @@ class NodeDataRepository extends Repository
 
     /**
      * @param string $workspaceName
-     * @param string $lastPOI
+     * @param string|null $lastPersistenceObjectIdentifier
      * @param int $maxResults
      * @return IterableResult
      * @throws \Flowpack\ElasticSearch\ContentRepositoryAdaptor\Exception
      */
-    public function findAllBySiteAndWorkspace(string $workspaceName, string $lastPOI=null, int $maxResults = 1000): IterableResult
+    public function findAllBySiteAndWorkspace(string $workspaceName, string $lastPersistenceObjectIdentifier = null, int $maxResults = 1000): IterableResult
     {
-        /** @var QueryBuilder $queryBuilder */
         $queryBuilder = $this->entityManager->createQueryBuilder();
         $queryBuilder->select('n.Persistence_Object_Identifier persistenceObjectIdentifier, n.identifier identifier, n.dimensionValues dimensions, n.nodeType nodeType, n.path path')
             ->from(NodeData::class, 'n')
@@ -63,15 +59,15 @@ class NodeDataRepository extends Repository
             ])
             ->orderBy('n.Persistence_Object_Identifier');
 
-        if (!empty($lastPOI)) {
-            $queryBuilder->andWhere($queryBuilder->expr()->gt('n.Persistence_Object_Identifier', $queryBuilder->expr()->literal($lastPOI)));
+        if (!empty($lastPersistenceObjectIdentifier)) {
+            $queryBuilder->andWhere($queryBuilder->expr()->gt('n.Persistence_Object_Identifier', $queryBuilder->expr()->literal($lastPersistenceObjectIdentifier)));
         }
 
-        $excludedNodeTypes = array_keys(array_filter($this->nodeTypeIndexingConfiguration->getIndexableConfiguration(), static function($value) {
+        $excludedNodeTypes = array_keys(array_filter($this->nodeTypeIndexingConfiguration->getIndexableConfiguration(), static function ($value) {
             return !$value;
         }));
 
-        if(!empty($excludedNodeTypes)) {
+        if (!empty($excludedNodeTypes)) {
             $queryBuilder->andWhere($queryBuilder->expr()->notIn('n.nodeType', $excludedNodeTypes));
         }
 
