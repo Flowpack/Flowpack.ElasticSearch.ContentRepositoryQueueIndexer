@@ -11,12 +11,12 @@ namespace Flowpack\ElasticSearch\ContentRepositoryQueueIndexer;
  * source code.
  */
 
+use Flowpack\ElasticSearch\ContentRepositoryAdaptor\Indexer\NodeIndexer;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Repository\NodeDataRepository;
 use Flowpack\ElasticSearch\ContentRepositoryQueueIndexer\Domain\Service\FakeNodeDataFactory;
 use Flowpack\JobQueue\Common\Job\JobInterface;
 use Neos\ContentRepository\Domain\Factory\NodeFactory;
 use Neos\ContentRepository\Domain\Service\ContextFactoryInterface;
-use Neos\ContentRepository\Search\Indexer\NodeIndexerInterface;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Utility\Algorithms;
 use Psr\Log\LoggerInterface;
@@ -31,7 +31,7 @@ abstract class AbstractIndexingJob implements JobInterface
     protected $logger;
 
     /**
-     * @var NodeIndexerInterface
+     * @var NodeIndexer
      * @Flow\Inject
      */
     protected $nodeIndexer;
