@@ -137,7 +137,7 @@ class UpdateAliasJob implements JobInterface
                 }
             }
         } catch (ApiException $exception) {
-            $response = json_decode($exception->getResponse(), true, 512, JSON_THROW_ON_ERROR);
+            $response = json_decode($exception->getResponse() instanceof ResponseInterface ? $exception->getResponse()->getBody()->__toString() : (string) $exception->getResponse(), true, 512, JSON_THROW_ON_ERROR);
             if ($response->error instanceof \stdClass) {
                 $this->logger->error(sprintf('Old indices for alias %s could not be removed. ElasticSearch responded with status %s, saying "%s: %s"', $this->indexPostfix, $response->status, $response->error->type, $response->error->reason), LogEnvironment::fromMethodName(__METHOD__));
             } else {
