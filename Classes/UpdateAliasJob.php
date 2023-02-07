@@ -21,6 +21,7 @@ use Flowpack\JobQueue\Common\Queue\QueueInterface;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Log\Utility\LogEnvironment;
 use Neos\Flow\Utility\Algorithms;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
 class UpdateAliasJob implements JobInterface
