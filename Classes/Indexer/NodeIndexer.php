@@ -104,8 +104,32 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
             }
         }
 
-        $removalJob = new RemovalJob($this->indexNamePostfix, $targetWorkspaceName, $this->nodeAsArray($node));
-        $this->jobManager->queue(NodeIndexQueueCommandController::LIVE_QUEUE_NAME, $removalJob);
+        $dimensionCombinations = $this->dimensionService->getDimensionCombinationsForIndexing($node);
+
+        if (array_filter($dimensionCombinations) === []) {
+            $removalJob = new RemovalJob($this->indexNamePostfix, $targetWorkspaceName, $this->nodeAsArray($node));
+            $this->jobManager->queue(NodeIndexQueueCommandController::LIVE_QUEUE_NAME, $removalJob);
+        } else {
+            foreach ($dimensionCombinations as $combination) {
+
+                $nodeFromContext = $this->createContentContext($targetWorkspaceName, $combination)->getNodeByIdentifier($node->getIdentifier());
+                if ($nodeFromContext instanceof NodeInterface && !$nodeFromContext->isRemoved()) {
+                    continue;
+                }
+
+                $fakeNodeArray = [
+                    'persistenceObjectIdentifier' => 'fake',
+                    'workspace' => $node->getWorkspace()->getName(),
+                    'path' => $node->getPath(),
+                    'identifier' => $node->getIdentifier(),
+                    'nodeType' => $node->getNodeType()->getName(),
+                    'dimensions' => $combination
+                ];
+
+                $removalJob = new RemovalJob($this->indexNamePostfix, $targetWorkspaceName, [$fakeNodeArray]);
+                $this->jobManager->queue(NodeIndexQueueCommandController::LIVE_QUEUE_NAME, $removalJob);
+            }
+        }
     }
 
     /**
