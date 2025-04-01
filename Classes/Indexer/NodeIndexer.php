@@ -105,6 +105,7 @@ class NodeIndexer extends ContentRepositoryAdaptor\Indexer\NodeIndexer
         }
 
         $dimensionCombinations = $this->dimensionService->getDimensionCombinationsForIndexing($node);
+        $targetWorkspaceName = $targetWorkspaceName ?? $node->getWorkspace()->getName();
 
         if (array_filter($dimensionCombinations) === []) {
             $removalJob = new RemovalJob($this->indexNamePostfix, $targetWorkspaceName, $this->nodeAsArray($node));
